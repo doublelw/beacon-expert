@@ -1,6 +1,7 @@
 """Beacon专家 - FastAPI应用入口."""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 from src.config import CORS_ORIGINS
 from src.database import init_db
@@ -49,9 +50,17 @@ async def root():
 
 
 # === 路由注册 ===
-from src.routes import users, knowledge, settings, drawings, memory
+from src.routes import users, knowledge, settings, drawings, memory, convert
 app.include_router(users.router)
 app.include_router(knowledge.router)
 app.include_router(settings.router)
 app.include_router(drawings.router)
 app.include_router(memory.router)
+app.include_router(convert.router)
+
+
+@app.get("/app")
+async def frontend():
+    """前端SPA."""
+    from src.frontend import HTML
+    return HTMLResponse(HTML)
