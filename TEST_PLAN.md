@@ -1,7 +1,7 @@
-# Beacon专家 · 测试计划 v1
+# Beacon专家 · 测试计划 v2 (审计修订)
 
-> 方案审计暂停(R1=64→R2=77→R3=83, 设计层面已完整)
-> 进入: 测试计划 → 审计 → 修改 → 审计 loop → 全覆盖后开发
+> 方案审计: R1=64→R2=77→R3=83 (暂停, 设计完整)
+> 测试审计: R1=NOT READY (AI测试虚化+性能缺指标+接缝未测) → v2补齐
 
 ## 测试范围
 
@@ -201,14 +201,102 @@
 - [ ] 超大文件(>50MB) → 拒绝
 - [ ] 路径遍历(../../etc/passwd) → 拒绝(realpath边界)
 - [ ] 恶意STEP(含脚本注入) → freecadcmd沙箱隔离
+- [ ] ZIP炸弹(压缩STP解压OOM) → 解压大小限制
+- [ ] 恶意STEP ODA解析漏洞 → 沙箱隔离+版本固定
 
 ### T9.2 认证安全
 - [ ] 无JWT访问API → 401
 - [ ] 伪造JWT → 拒绝(签名校验)
+- [ ] JWT算法混淆(none/RS256→HS256) → 拒绝
 - [ ] JWT密钥轮换 → 双密钥并行期+旧密钥过期
+- [ ] 刷新token窃取 → refresh绑定IP/UA
+- [ ] CSRF → SameSite cookie + Origin校验
 - [ ] CORS白名单(非*)
 
 ### T9.3 数据安全
 - [ ] API key非明文存储(fernet加密)
 - [ ] STP文件存储隔离(/storage/tasks/{uuid}/沙箱)
 - [ ] 转换完成后work_dir清理策略(定时清理+容量告警)
+- [ ] 多租户隔离: A用户不能读B用户的图纸(scope_filter验证)
+- [ ] 日志脱敏: prompt/LLM调用日志不含敏感几何数据
+- [ ] AI provider数据合规: 客户CAD几何上传外部LLM是否合规(配置开关: 本地Ollama模式/脱敏模式)
+
+---
+
+## AI测试体系 (R1审计P0: 最薄弱环节)
+
+### T-AI.1 LLM Mock层
+- [ ] Mock provider实现(录制真实LLM响应→回放)
+- [ ] 离线测试模式(无网络, 全mock)
+- [ ] 多provider mock(GLM/Claude/OpenAI各自录制)
+- [ ] VCR(pytest-vcr)或自定义录制/回放
+
+### T-AI.2 Golden Set回归
+- [ ] 50+固定case(钣金20/注塑10/机加工10/冲压5/铸造5)
+- [ ] 每case: 输入STEP → 期望输出范围(工艺类型/置信度/关键特征)
+- [ ] CI每次push自动跑golden set → 输出不在范围=prompt退化
+- [ ] prompt版本快照(变更需审核+回归通过)
+
+### T-AI.3 置信度校准
+- [ ] 声称0.9 → 实际准确率≥0.85(Brier score/ECE评估)
+- [ ] 置信度阈值校准: <0.7触发问工程师, 验证阈值合理性
+- [ ] 兜底触发: LLM不可用/3次Pydantic失败 → 规则兜底 + degraded标记
+
+### T-AI.4 双层审查仲裁
+- [ ] 仲裁一致率: LLM审查与人工标注Kappa ≥ 0.7
+- [ ] 仲裁冲突: auditor pass + LLM fail → done+warnings(验证)
+- [ ] 仲裁器自身崩溃 → 最终兜底(仅输出auditor确定性结果)
+
+### T-AI.5 AI成本门禁
+- [ ] CI token数/费用上限(单次转换<0.5元)
+- [ ] 月度预算超限 → 拒绝新任务/降级
+- [ ] 成本仪表盘(前端设置页)
+
+### T-AI.6 兜底链完整性
+- [ ] LLM挂 → 规则兜底(M0用veritas分类/M2用gen_ai_plan模板)
+- [ ] 规则也挂 → 默认值(M0=unknown/M2=最小标注plan)
+- [ ] 全链降级标记(degraded=true传递到最终task结果)
+
+---
+
+## 性能测试 (R1审计P0: SLA全缺)
+
+### T-PERF.1 各Milestone单独SLA
+| Milestone | SLA | 测试方法 |
+|-----------|-----|---------|
+| M0 工艺分类 | <10s p99 | 50件STP批量跑, 统计p50/p99 |
+| M1 理解 | <8s p99 | veritas.json→LLM描述 |
+| M2 规划 | <15s p99 | LLM规划+Pydantic校验 |
+| M3 投影 | <30s p99 | HLR三路+特征ID关联 |
+| M4-M6 渲染 | <10s p99 | render_engine |
+| M7 审查 | <15s p99 | auditor+LLM |
+| 全流程 | <90s p99 @单件 | 端到端计时 |
+
+### T-PERF.2 并发阶梯测试
+- [ ] 1并发 → 基准延迟/内存/CPU
+- [ ] 2并发 → 延迟增量<50%, 内存<2x
+- [ ] 4并发(semaphore上限) → 资源不超限
+- [ ] 8并发(超semaphore) → 排队, 无OOM/无数据覆盖
+
+### T-PERF.3 资源监控
+- [ ] freecadcmd单进程内存<500MB
+- [ ] SQLite WAL模式并发写无SQLITE_BUSY
+- [ ] work_dir磁盘: 单任务<100MB, 超限清理
+- [ ] LLM API rate limit不触发(adapter限流验证)
+
+---
+
+## 集成契约测试 (R1审计P0: 接缝未测)
+
+### T-INT.1 M0→M7单件端到端
+- [ ] 固定板.stp → M0判断钣金 → M1描述 → M2规划 → M3投影 → M4-M6渲染 → M7审查 → eval
+- [ ] 全链路无阶段间数据断裂
+- [ ] 中间JSON schema契约(M0输出=M1输入, M2输出=render_engine输入)
+
+### T-INT.2 异常几何输入
+- [ ] 零厚度钣金(D=0) → M0分类失败/降级
+- [ ] 自相交几何 → M3投影不崩溃
+- [ ] 非流形几何 → M3降级处理
+- [ ] 空STEP文件(0KB) → 上传拒绝
+- [ ] 超大STEP(>50MB) → 上传拒绝
+- [ ] 损坏STEP(截断/格式错) → freecadcmd错误处理
