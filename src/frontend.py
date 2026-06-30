@@ -175,6 +175,119 @@ HTML = """<!DOCTYPE html>
   .settings-msg.ok { color: var(--success); }
   .settings-msg.err { color: var(--danger); }
   .key-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* === AI对话面板 === */
+  .chat-wrap {
+    display: flex; flex-direction: column; height: 100%;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .chat-header {
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--panel-2);
+  }
+  .chat-header .ch-title { font-size: 15px; font-weight: 600; }
+  .chat-header .ch-status { font-size: 12px; color: var(--muted); }
+
+  /* 阶段进度条 */
+  .stage-bar {
+    display: flex; gap: 4px; padding: 10px 16px;
+    background: var(--panel-2); border-bottom: 1px solid var(--border);
+  }
+  .stage-node {
+    flex: 1; padding: 6px 4px; text-align: center; font-size: 11px;
+    color: var(--muted); background: var(--panel); border-radius: 4px;
+    border: 1px solid var(--border); position: relative;
+  }
+  .stage-node.done { color: var(--success); border-color: var(--success); background: rgba(52,211,153,0.08); }
+  .stage-node.active { color: var(--accent); border-color: var(--accent); background: rgba(79,140,255,0.10); font-weight: 600; }
+  .stage-node + .stage-node::before {
+    content: ''; position: absolute; left: -5px; top: 50%;
+    width: 8px; height: 1px; background: var(--border);
+  }
+
+  /* 对话消息区 */
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+    background: var(--bg);
+  }
+  .msg { max-width: 78%; padding: 12px 16px; border-radius: 12px;
+    font-size: 14px; line-height: 1.6; word-wrap: break-word; }
+  .msg.ai {
+    align-self: flex-start; background: var(--panel-2);
+    border: 1px solid var(--border); border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    align-self: flex-end; background: var(--accent); color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.system {
+    align-self: center; background: transparent; color: var(--muted);
+    font-size: 12px; border: 1px dashed var(--border); max-width: 60%;
+  }
+  .msg.ai strong, .msg.user strong { font-weight: 700; }
+  .msg.ai ul, .msg.ai ol { margin: 6px 0 6px 20px; }
+  .msg.ai li { margin: 2px 0; }
+  .msg.ai code {
+    background: var(--bg); padding: 1px 5px; border-radius: 3px;
+    font-family: ui-monospace, "SF Mono", monospace; font-size: 12px;
+  }
+  .msg-actions {
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);
+    display: flex; gap: 8px;
+  }
+  .msg-actions .act-btn {
+    padding: 4px 12px; font-size: 12px; border-radius: 4px;
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+  }
+  .msg-actions .act-btn.confirm { color: var(--success); border-color: var(--success); }
+  .msg-actions .act-btn.correct { color: var(--warn); border-color: var(--warn); }
+  .msg-actions .act-btn:hover:not(:disabled) { background: var(--panel); }
+  .msg-actions .act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* 上传区 */
+  .chat-empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px; color: var(--muted); padding: 40px;
+  }
+  .chat-empty .ce-icon { font-size: 48px; opacity: 0.6; }
+  .chat-dropzone {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 32px 48px; text-align: center; cursor: pointer;
+    transition: all 0.2s; width: 100%; max-width: 420px;
+  }
+  .chat-dropzone:hover, .chat-dropzone.dragover {
+    border-color: var(--accent); background: rgba(79,140,255,0.05);
+  }
+
+  /* 输入栏 */
+  .chat-input-bar {
+    padding: 12px 16px; border-top: 1px solid var(--border);
+    background: var(--panel); display: flex; gap: 8px; align-items: flex-end;
+  }
+  .chat-input-bar textarea {
+    flex: 1; resize: none; max-height: 120px; min-height: 40px;
+    padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 14px; font-family: inherit;
+  }
+  .chat-input-bar textarea:focus { border-color: var(--accent); outline: none; }
+  .chat-input-bar .send-btn {
+    padding: 10px 18px; background: var(--accent); color: #fff;
+    border-radius: 8px; font-size: 14px; font-weight: 500;
+  }
+  .chat-input-bar .send-btn:hover:not(:disabled) { background: var(--accent-hover); }
+  .chat-input-bar .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .chat-input-bar .download-btn {
+    padding: 10px 18px; background: var(--success); color: #fff;
+    border-radius: 8px; font-size: 14px; text-decoration: none;
+    display: inline-block;
+  }
+
+  /* 适配非chat视图: chat容器需占满高度 */
+  .main-content.chat-mode { padding: 16px; display: flex; }
+  .main-content.chat-mode > h2 { display: none; }
 </style>
 </head>
 <body>
@@ -225,6 +338,9 @@ HTML = """<!DOCTYPE html>
       </button>
       <button class="nav-item" data-view="settings" onclick="switchView('settings')">
         <span class="nav-icon">🔧</span> 设置
+      </button>
+      <button class="nav-item" data-view="chat" onclick="switchView('chat')">
+        <span class="nav-icon">🤖</span> Beacon
       </button>
     </div>
     <div class="main-content" id="main-content"></div>
@@ -314,9 +430,12 @@ function switchView(view) {
     n.classList.toggle('active', n.dataset.view === view);
   });
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  const main = document.getElementById('main-content');
+  main.classList.toggle('chat-mode', view === 'chat');
   if (view === 'convert') renderConvert();
   else if (view === 'knowledge') renderKnowledge();
   else if (view === 'settings') renderSettings();
+  else if (view === 'chat') renderChat();
 }
 
 function renderConvert() {
@@ -555,6 +674,272 @@ function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]));
+}
+
+// === AI对话面板 (Phase 4) ===
+let chatSessionId = null;
+let chatStage = 'init';
+const CHAT_STAGES = ['init', 'classify', 'understand', 'plan', 'convert', 'audit', 'done'];
+const STAGE_LABEL = {
+  init: '上传', classify: '分类', understand: '理解',
+  plan: '规划', convert: '转换', audit: '审计', done: '完成',
+};
+
+function renderChat() {
+  const el = document.getElementById('main-content');
+  el.innerHTML = `
+    <div class="chat-wrap">
+      <div class="chat-header">
+        <span class="ch-title">Beacon AI 助手</span>
+        <span class="ch-status" id="chat-status">就绪</span>
+      </div>
+      <div class="stage-bar" id="stage-bar">
+        ${CHAT_STAGES.map(s => `<div class="stage-node" data-stage="${s}">${STAGE_LABEL[s]}</div>`).join('')}
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-bar">
+        <textarea id="chat-input" rows="1" placeholder="输入消息... (Enter发送, Shift+Enter换行)"
+          onkeydown="handleChatKey(event)" oninput="autoGrow(this)"></textarea>
+        <button class="send-btn" id="chat-send" onclick="sendMessage()">发送</button>
+      </div>
+    </div>
+  `;
+  if (!chatSessionId) renderChatEmpty();
+  else {
+    // 恢复会话视图(简化: 直接渲染空提示)
+    renderChatEmpty();
+  }
+  updateStageBar();
+}
+
+function renderChatEmpty() {
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML = `
+    <div class="chat-empty">
+      <div class="ce-icon">📐</div>
+      <div style="font-size:15px;">上传STP文件开启AI对话转换</div>
+      <div class="chat-dropzone" id="chat-dropzone" onclick="document.getElementById('chat-file-input').click()">
+        <div style="font-size:28px; margin-bottom:8px;">📁</div>
+        <div>拖拽STP/STEP文件到此处，或点击选择</div>
+        <div style="font-size:12px; margin-top:6px; opacity:0.7;">支持 .stp / .step</div>
+        <input type="file" id="chat-file-input" class="file-input" accept=".stp,.step">
+      </div>
+    </div>
+  `;
+  setupChatDropzone();
+}
+
+function setupChatDropzone() {
+  const dz = document.getElementById('chat-dropzone');
+  if (!dz) return;
+  const input = document.getElementById('chat-file-input');
+  ['dragenter', 'dragover'].forEach(ev => {
+    dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); });
+  });
+  dz.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) startChat(e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', e => {
+    if (e.target.files.length) startChat(e.target.files[0]);
+  });
+}
+
+async function startChat(file) {
+  const suffix = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+  if (!['.stp', '.step'].includes(suffix)) {
+    appendMsg('system', '仅支持 .stp / .step 文件');
+    return;
+  }
+  // 切换到对话消息模式
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML = '';
+  appendMsg('user', '上传文件: ' + file.name);
+  setChatStatus('上传中...');
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const data = await api('/api/chat/start', { method: 'POST', body: fd });
+    chatSessionId = data.session_id || data.id;
+    chatStage = data.stage || 'init';
+    updateStageBar();
+    if (data.message) appendMsg('ai', data.message, data.stage);
+    setChatStatus('会话 #' + chatSessionId);
+  } catch (e) {
+    appendMsg('system', '启动失败: ' + e.message);
+    setChatStatus('错误');
+  }
+}
+
+function appendMsg(role, text, stage) {
+  const msgs = document.getElementById('chat-messages');
+  if (!msgs) return;
+  // 清除空状态占位
+  const empty = msgs.querySelector('.chat-empty');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = renderMarkdown(text);
+
+  // AI消息带确认/纠正按钮(非done阶段)
+  if (role === 'ai' && stage && stage !== 'done') {
+    const actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.innerHTML = `
+      <button class="act-btn confirm" onclick="confirmStage(this)">确认</button>
+      <button class="act-btn correct" onclick="correctStage(this)">纠正</button>
+    `;
+    div.appendChild(actions);
+  }
+  // done阶段附加下载按钮
+  if (role === 'ai' && stage === 'done') {
+    const actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.innerHTML = `<a class="download-btn" href="#" onclick="downloadDxf(event)">下载 DXF</a>`;
+    div.appendChild(actions);
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function renderMarkdown(text) {
+  // 简单Markdown: 转义→粗体→列表→换行
+  let s = escapeHtml(text);
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // 行内代码
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // 无序列表
+  const lines = s.split('\n');
+  let html = '', inUl = false;
+  for (const ln of lines) {
+    const m = ln.match(/^\s*[-*]\s+(.*)$/);
+    if (m) {
+      if (!inUl) { html += '<ul>'; inUl = true; }
+      html += '<li>' + m[1] + '</li>';
+    } else {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (ln.trim() === '') html += '<br>';
+      else html += ln + '<br>';
+    }
+  }
+  if (inUl) html += '</ul>';
+  return html;
+}
+
+function autoGrow(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!chatSessionId) {
+    appendMsg('system', '请先上传STP文件开启会话');
+    return;
+  }
+  appendMsg('user', text);
+  input.value = '';
+  autoGrow(input);
+  setChatStatus('AI思考中...');
+  toggleSend(false);
+  try {
+    const data = await api('/api/chat/' + chatSessionId + '/message', {
+      method: 'POST', body: JSON.stringify({ message: text }),
+    });
+    if (data.stage) { chatStage = data.stage; updateStageBar(); }
+    if (data.message) appendMsg('ai', data.message, data.stage);
+    setChatStatus('会话 #' + chatSessionId);
+  } catch (e) {
+    appendMsg('system', '发送失败: ' + e.message);
+    setChatStatus('错误');
+  } finally {
+    toggleSend(true);
+  }
+}
+
+async function confirmStage(btn) {
+  if (!chatSessionId) return;
+  btn.disabled = true;
+  setChatStatus('处理中...');
+  try {
+    const data = await api('/api/chat/' + chatSessionId + '/confirm', { method: 'POST' });
+    if (data.stage) { chatStage = data.stage; updateStageBar(); }
+    if (data.message) appendMsg('ai', data.message, data.stage);
+    setChatStatus('会话 #' + chatSessionId);
+  } catch (e) {
+    appendMsg('system', '确认失败: ' + e.message);
+    btn.disabled = false;
+  }
+}
+
+async function correctStage(btn) {
+  if (!chatSessionId) return;
+  const input = document.getElementById('chat-input');
+  const hint = input.value.trim();
+  setChatStatus('处理中...');
+  try {
+    const body = { message: hint || '请重新评估本阶段' };
+    const data = await api('/api/chat/' + chatSessionId + '/correct', {
+      method: 'POST', body: JSON.stringify(body),
+    });
+    if (hint) { appendMsg('user', hint); input.value = ''; autoGrow(input); }
+    if (data.stage) { chatStage = data.stage; updateStageBar(); }
+    if (data.message) appendMsg('ai', data.message, data.stage);
+    setChatStatus('会话 #' + chatSessionId);
+  } catch (e) {
+    appendMsg('system', '纠正失败: ' + e.message);
+  }
+}
+
+async function downloadDxf(e) {
+  e.preventDefault();
+  if (!chatSessionId) return;
+  try {
+    const res = await fetch(API + '/api/chat/' + chatSessionId + '/download', {
+      headers: { 'Authorization': 'Bearer ' + TOKEN },
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = (chatSessionId || 'beacon') + '.dxf';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    appendMsg('system', '下载失败: ' + err.message);
+  }
+}
+
+function updateStageBar() {
+  const idx = CHAT_STAGES.indexOf(chatStage);
+  document.querySelectorAll('.stage-node').forEach(el => {
+    const si = CHAT_STAGES.indexOf(el.dataset.stage);
+    el.classList.remove('done', 'active');
+    if (si < idx) el.classList.add('done');
+    else if (si === idx) el.classList.add('active');
+  });
+}
+
+function setChatStatus(t) {
+  const el = document.getElementById('chat-status');
+  if (el) el.textContent = t;
+}
+
+function toggleSend(enable) {
+  const btn = document.getElementById('chat-send');
+  if (btn) btn.disabled = !enable;
 }
 
 // === 启动 ===

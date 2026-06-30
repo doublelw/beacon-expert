@@ -154,3 +154,20 @@ class MemoryEntry(Base):
     use_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_used_at = Column(DateTime, nullable=True)
+
+
+# === AI会话系统 (Phase 4) ===
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+    id = Column(String(36), primary_key=True)  # UUID
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    task_id = Column(String(36), ForeignKey("conversion_tasks.id"), nullable=True)
+    stage = Column(String(20), nullable=False, default="init")
+    # init/classify/understand/plan/convert/audit/done/failed
+    messages = Column(JSON, default=list)
+    # [{role: "ai"/"user", content: "...", stage: "classify", timestamp: "..."}]
+    context = Column(JSON, default=dict)
+    # {process, description, plan, features_json, veritas_path, dxf_path}
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
