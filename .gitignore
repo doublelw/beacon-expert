@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+data/*.db
+storage/tasks/
+output/
+.memsearch/

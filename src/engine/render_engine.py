@@ -79,7 +79,7 @@ from typing import Dict, List, Optional, Tuple
 
 import ezdxf
 from ezdxf.enums import TextEntityAlignment
-from standard_parts import draw_fastener_standard, get_view_role
+from .standard_parts import draw_fastener_standard, get_view_role
 
 # ─────────────────────────────────────────────────────────────
 # GB 规范常量 (SMART 量化)

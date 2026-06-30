@@ -1,6 +1,6 @@
 [project]
 name = "beacon-expert"
-version = "0.1.1"
+version = "0.2.0"
 description = "Beacon专家 - 企业级AI驱动3D→2D工程图自动转换平台"
 requires-python = ">=3.10"
 dependencies = [

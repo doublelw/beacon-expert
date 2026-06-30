@@ -16,7 +16,9 @@ checks = []
 def add(cat, item, ok, detail=''):
     checks.append({'cat': cat, 'item': item, 'pass': bool(ok), 'detail': detail})
 
-v = json.load(open(VERITAS)) if os.path.exists(VERITAS) else {}
+try:
+    v = json.load(open(VERITAS)) if os.path.exists(VERITAS) else {}
+except: v = {}
 plan = json.load(open(PLAN)) if os.path.exists(PLAN) else {}
 doc = ezdxf.readfile(DXF) if os.path.exists(DXF) else None
 msp = doc.modelspace() if doc else None

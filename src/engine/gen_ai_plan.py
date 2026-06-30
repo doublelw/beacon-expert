@@ -5,15 +5,17 @@ AI识别零部件 + 全部制造尺寸(直径/深度/位置/间距/贯穿/折弯
 import json, math
 from collections import defaultdict
 
-v = json.load(open('output/veritas.json'))
-bb = v['bbox']
+try:
+    v = json.load(open('output/veritas.json'))
+except: v = {}
+bb = v.get('bbox', {'xmin':0,'ymin':0,'zmin':0,'xmax':0,'ymax':0,'zmax':0})
 W = bb['xmax'] - bb['xmin']
 H = bb['ymax'] - bb['ymin']
 D = bb['zmax'] - bb['zmin']
 
 # 按规格分组孔(同 radii+轴向+类型)
 groups = defaultdict(list)
-for f in v['features']:
+for f in v.get('features', []):
     if f['type'] != 'PIERCING':
         continue
     ar = tuple(sorted(round(x, 1) for x in f.get('all_radii', [f['radius']])))
@@ -87,17 +89,17 @@ for (radii, axis, ht), holes in sorted(groups.items(), key=lambda x: -len(x[1]))
 
 # 折弯/冲压/倒角尺寸
 bends = []
-for f in v['features']:
+for f in v.get('features', []):
     if f['type'] == 'BEND':
         bends.append({'radius_mm': f['radius'], 'axis': f['axis'],
                       'center': f['center'], 'span_mm': f.get('span')})
 stamps = []
-for f in v['features']:
+for f in v.get('features', []):
     if f['type'] == 'STAMP':
         bx = f['bbox']
         stamps.append({'size_mm': [round(bx[3]-bx[0],1), round(bx[4]-bx[1],1), round(bx[5]-bx[2],1)],
                        'center': f['center']})
-chamfers = [{'radius_mm': f.get('radius'), 'center': f.get('center')} for f in v['features'] if f['type'] == 'CHAMFER']
+chamfers = [{'radius_mm': f.get('radius'), 'center': f.get('center')} for f in v.get('features', []) if f.get('type') == 'CHAMFER']
 
 plan = {
     '_meta': {'method': 'AI识别零部件+全部尺寸提取', 'source': 'veritas.json'},
