@@ -5,7 +5,7 @@
 """
 from fastapi.responses import HTMLResponse
 
-HTML = """<!DOCTYPE html>
+HTML = r"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
