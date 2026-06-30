@@ -29,13 +29,8 @@ class RegisterReq(BaseModel):
 
 
 class LoginReq(BaseModel):
-    email: str = Field(min_length=3, max_length=255)
+    email: str = Field(min_length=1, max_length=255)
     password: str
-
-    @field_validator("email")
-    @classmethod
-    def _check_email(cls, v: str) -> str:
-        return _valid_email(v)
 
 
 @router.post("/register")
@@ -59,14 +54,17 @@ def register(req: RegisterReq, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(req: LoginReq, db: Session = Depends(get_db)):
-    """登录: verify → 返回JWT."""
-    user = db.query(User).filter(User.email == req.email).first()
+    """登录: 支持email或username, verify → 返回JWT."""
+    login_val = req.email.lower().strip()
+    user = db.query(User).filter(
+        (User.email == login_val) | (User.username == login_val)
+    ).first()
     if not user or not verify_password(req.password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="邮箱或密码错误")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="账号已禁用")
     token = create_token(user.id, user.email, user.role)
-    return {"token": token, "user_id": user.id, "role": user.role}
+    return {"token": token, "user_id": user.id, "role": user.role, "username": user.username}
 
 
 @router.get("/me")
