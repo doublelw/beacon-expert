@@ -48,9 +48,8 @@ async def root():
     return {"name": "Beacon专家", "version": "0.1.0", "docs": "/docs"}
 
 
-# === 路由注册 (后续Phase逐步添加) ===
-# from src.routes import users, knowledge, convert, settings, chat, drawings, memory
-# app.include_router(users.router, prefix="/api/auth", tags=["认证"])
-# app.include_router(knowledge.router, prefix="/api/knowledge", tags=["知识库"])
-# app.include_router(convert.router, prefix="/api/convert", tags=["转换"])
-# app.include_router(settings.router, prefix="/api/settings", tags=["设置"])
+# === 路由注册 ===
+from src.routes import users, knowledge, settings
+app.include_router(users.router)
+app.include_router(knowledge.router)
+app.include_router(settings.router)
