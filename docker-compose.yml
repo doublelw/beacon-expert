@@ -1,0 +1,9 @@
+services:
+  beacon:
+    build: .
+    ports:
+      - "8767:8767"
+    volumes:
+      - "./data:/app/data"
+      - "./storage:/app/storage"
+    restart: unless-stopped

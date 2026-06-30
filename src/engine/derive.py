@@ -97,12 +97,19 @@ def derive_dxf_scale(source_dxf_path: str, scale_factor: float) -> str:
             # start_angle/end_angle 不变
 
         elif dxftype == "LWPOLYLINE":
-            # lwpolyline.dxf.elevation 是 z 基准高度, 同步缩放
-            with entity.points("xyseb") as pts:  # x,y,start_width,end_width,bulge
+            # lwpolyline 顶点: ezdxf API 返回 tuple 序列 (x,y[,start_w,end_w[,bulge]])
+            # 用 get_points → set_points 重写
+            pts = list(entity.get_points())
+            if pts:
+                scaled = []
                 for p in pts:
-                    p.x = p.x * scale_factor
-                    p.y = p.y * scale_factor
-            entity.dxf.elevation = entity.dxf.elevation * scale_factor
+                    x, y = p[0] * scale_factor, p[1] * scale_factor
+                    # 保留可选的 start_w/end_w/bulge
+                    rest = p[2:]
+                    scaled.append((x, y, *rest))
+                entity.set_points(scaled)
+            if entity.dxf.hasattr("elevation"):
+                entity.dxf.elevation = entity.dxf.elevation * scale_factor
 
         elif dxftype == "POLYLINE":
             # 3D POLYLINE: 遍历顶点
