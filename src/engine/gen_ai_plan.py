@@ -111,7 +111,7 @@ plan = {
     'chamfers': chamfers,
     'total_holes': sum(f['count'] for f in fasteners),
 }
-json.dump(plan, open('output/ai_plan.json', 'w'), ensure_ascii=False, indent=1)
+json.dump(plan, open('output/ai_plan.json', 'w'), ensure_ascii=False, indent=1) if __name__ == '__main__' else None
 
 print(f'=== AI完整尺寸识别 ({len(fasteners)}类钉/孔) ===')
 for f in fasteners:
