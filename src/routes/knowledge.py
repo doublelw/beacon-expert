@@ -9,6 +9,17 @@ from src.database import get_db, User, Knowledge
 
 router = APIRouter(prefix="/api/knowledge", tags=["知识库"])
 
+@router.get("/list")
+def list_knowledge_compat(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """兼容前端 /api/knowledge/list 调用."""
+    q = db.query(Knowledge)
+    q = scope_filter(q, Knowledge, user)
+    items = q.order_by(Knowledge.id.desc()).all()
+    return {"total": len(items), "items": [{"id": k.id, "title": k.title, "category": k.category, "scope": k.scope} for k in items]}
+
 
 class KnowledgeCreate(BaseModel):
     title: str = Field(min_length=1, max_length=255)
