@@ -115,6 +115,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .ai-input textarea:focus{border-color:var(--accent);outline:none}
 .ai-input .send-btn{padding:7px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;transition:var(--transition)}
 .ai-input .send-btn:hover{background:#5558e0}
+/* === 拖拽分隔条 === */
+.resizer{width:5px;cursor:col-resize;background:transparent;flex-shrink:0;position:relative;z-index:5;transition:background .15s}
+.resizer:hover,.resizer.dragging{background:var(--accent);opacity:.4}
 </style>
 </head>
 <body>
@@ -160,6 +163,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="tree-item" onclick="showPage('settings','模型配置')"><span class="tree-icon">🔧</span> 模型配置</div>
 <div class="tree-item" onclick="showPage('memory','AI记忆')"><span class="tree-icon">🧠</span> AI记忆</div>
 </aside>
+<div class="resizer" id="resizer-left"></div>
 
 <!-- 中栏: 内容 -->
 <main id="content">
@@ -182,6 +186,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 </div>
 </div>
 </main>
+<div class="resizer" id="resizer-right"></div>
 
 <!-- 右栏: Beacon AI + 转换 -->
 <aside id="right">
@@ -395,7 +400,46 @@ function renderStageBar(){
 // === 启动 ===
 async function init(){
   if(TOKEN){try{await api('/api/auth/me');enterApp()}catch(e){localStorage.clear();TOKEN='';USER=null}}
+  initResizers();
 }
 init();
+
+// === 三栏拖拽调宽 + 记忆 ===
+function initResizers(){
+  const left=document.getElementById('left');
+  const right=document.getElementById('right');
+  const main=document.getElementById('main');
+  // 恢复上次宽度
+  const sw=localStorage.getItem('beacon_col_widths');
+  if(sw){const w=JSON.parse(sw);if(w.left)left.style.width=w.left+'px';if(w.right)right.style.width=w.right+'px'}
+  function makeResizer(resizer,target,side){
+    let startX=0,startW=0;
+    resizer.addEventListener('mousedown',e=>{
+      e.preventDefault();startX=e.clientX;startW=target.offsetWidth;
+      resizer.classList.add('dragging');document.body.style.cursor='col-resize';
+      const onMove=ev=>{
+        const dx=ev.clientX-startX;
+        let newW=startW+(side==='left'?dx:-dx);
+        newW=Math.max(140,Math.min(newW,Math.floor(window.innerWidth*0.5)));
+        target.style.width=newW+'px';
+      };
+      const onUp=()=>{
+        resizer.classList.remove('dragging');document.body.style.cursor='';
+        document.removeEventListener('mousemove',onMove);
+        document.removeEventListener('mouseup',onUUP);
+        // 保存
+        localStorage.setItem('beacon_col_widths',JSON.stringify({
+          left:left.offsetWidth,right:right.offsetWidth
+        }));
+      };
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp);
+    });
+  }
+  const rl=document.getElementById('resizer-left');
+  const rr=document.getElementById('resizer-right');
+  if(rl)makeResizer(rl,left,'left');
+  if(rr)makeResizer(rr,right,'right');
+}
 </script>
 </body></html>"""
