@@ -1,5 +1,5 @@
-"""Beacon专家 - 前端SPA (wiki式三栏 + 右栏AI对话常驻).
-参考企业知识库serve.py风格: 左导航 | 中内容 | 右AI对话."""
+"""Beacon专家 - 前端SPA (对标企业知识库wiki风格).
+顶栏(工作台选择) | 左栏(目录) | 中栏(内容) | 右栏(Beacon AI+转换)."""
 
 HTML = r"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -8,116 +8,113 @@ HTML = r"""<!DOCTYPE html>
 <title>Beacon专家</title>
 <style>
 :root{
-  --bg:#ffffff;--bg2:#f8f9fb;--panel:#ffffff;--panel2:#f0f2f5;
-  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;
-  --accent:#6366f1;--accent-hover:#5558e0;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;
-  --radius:8px;
+  --bg:#ffffff;--bg2:#f8f9fb;--bg3:#f0f1f3;
+  --surface:#ffffff;--surface2:#f8f9fb;
+  --border:#e5e7eb;--border2:#d0d5dd;
+  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
+  --accent:#6366f1;--accent-light:#eef2ff;--accent-bg:#e0e7ff;
+  --wiki:#7c3aed;--wiki-light:#f5f3ff;
+  --green:#059669;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;
+  --radius:8px;--radius-sm:6px;--radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:"SF Mono",SFMono-Regular,Menlo,monospace;
+  --sidebar-w:240px;--right-w:380px;--topbar-h:48px;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg2);color:var(--text);font-size:14px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
 
 /* === 登录 === */
-#login-view{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
-.login-card{background:#fff;border-radius:16px;padding:40px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.login-card h1{font-size:24px;text-align:center;margin-bottom:4px;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.login-card .sub{text-align:center;color:var(--muted);margin-bottom:28px}
+#login-view{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg2)}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px;width:360px;box-shadow:var(--shadow-md)}
+.login-card h1{font-size:20px;text-align:center;margin-bottom:4px;color:var(--text)}
+.login-card .sub{text-align:center;color:var(--text3);margin-bottom:28px;font-size:13px}
 .field{margin-bottom:16px}
-.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-.field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
-.field input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
-.btn{padding:10px 16px;border-radius:8px;font-size:14px;cursor:pointer;border:none;transition:.15s}
+.field label{display:block;font-size:12px;color:var(--text3);margin-bottom:6px}
+.field input{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:14px;background:var(--bg2)}
+.field input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-light)}
+.btn{padding:9px 16px;border-radius:var(--radius-sm);font-size:14px;cursor:pointer;border:none;transition:var(--transition)}
 .btn-primary{background:var(--accent);color:#fff;width:100%}
-.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:hover{background:#5558e0}
 .err{color:var(--red);font-size:13px;text-align:center;margin-top:8px;min-height:18px}
 
-/* === 主布局(wiki式三栏) === */
-#app-view{display:none;height:100vh;flex-direction:column}
-.app-header{height:52px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;align-items:center;justify-content:space-between;padding:0 20px;color:#fff}
-.app-header .logo{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
-.app-header .logo span.icon{font-size:22px}
-.app-header .user-area{display:flex;align-items:center;gap:12px;font-size:13px}
-.app-header .user-area .role{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px;font-size:11px}
-.app-header .user-area .logout{cursor:pointer;opacity:.8}
-.app-header .user-area .logout:hover{opacity:1}
+/* === 顶栏 === */
+#topbar{height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;z-index:10}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-logo{font-size:16px;font-weight:700;color:var(--text)}
+.workspace-select{padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);background:var(--bg2);cursor:pointer}
+.topbar-right{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
+.role-tag{font-size:11px;padding:1px 6px;border-radius:3px;background:var(--accent-light);color:var(--accent)}
+.logout-link{color:var(--text3);cursor:pointer}
+.logout-link:hover{color:var(--text)}
 
-.app-body{flex:1;display:flex;overflow:hidden}
+/* === 三栏 === */
+#main{display:flex;flex:1;overflow:hidden}
 
-/* === 左栏(导航) === */
-.sidebar{width:200px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:12px 0}
-.sidebar .nav-section{padding:8px 16px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:8px}
-.sidebar .nav-item{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);transition:.1s;border-left:3px solid transparent}
-.sidebar .nav-item:hover{background:var(--bg2)}
-.sidebar .nav-item.active{background:rgba(99,102,241,.08);border-left-color:var(--accent);color:var(--accent);font-weight:600}
-.sidebar .nav-item .nav-icon{font-size:16px;width:20px;text-align:center}
+/* 左栏 - 目录 */
+#left{width:var(--sidebar-w);min-width:160px;max-width:400px;border-right:1px solid var(--border);background:var(--bg);overflow-y:auto;flex-shrink:0}
+.sidebar-section{padding:12px 16px 4px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.tree-item{padding:6px 16px;cursor:pointer;font-size:14px;color:var(--text2);transition:var(--transition);display:flex;align-items:center;gap:6px}
+.tree-item:hover{background:var(--bg2);color:var(--text)}
+.tree-item.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.tree-icon{font-size:14px;width:16px;text-align:center;opacity:.7}
+.tree-children{margin-left:8px}
+.tree-child{padding:5px 16px 5px 28px;cursor:pointer;font-size:13px;color:var(--text3);transition:var(--transition)}
+.tree-child:hover{color:var(--text);background:var(--bg2)}
+.tree-child.active{color:var(--accent)}
 
-/* === 中栏(内容) === */
-.main-content{flex:1;padding:24px;overflow-y:auto;background:var(--bg2)}
-.section-title{font-size:20px;font-weight:600;margin-bottom:16px}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-.card h3{font-size:16px;margin-bottom:12px}
+/* 中栏 - 内容 */
+#content{flex:1;overflow-y:auto;padding:24px 32px;background:var(--bg)}
+.content-header{font-size:22px;font-weight:700;margin-bottom:4px}
+.content-meta{color:var(--text3);font-size:13px;margin-bottom:20px}
+.content-body{font-size:15px;line-height:1.7;color:var(--text)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:600;margin-bottom:8px}
+.card-body{font-size:14px;color:var(--text2);line-height:1.6}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:3px;margin-right:4px}
+.tag-blue{background:var(--accent-light);color:var(--accent)}
+.tag-green{background:var(--green-bg);color:var(--green)}
+.tag-amber{background:var(--amber-bg);color:var(--amber)}
 
-/* === 右栏(AI对话常驻) === */
-.chat-panel{width:360px;border-left:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column}
-.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(99,102,241,.05),rgba(118,75,162,.05))}
-.chat-header .ch-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
-.chat-header .ch-status{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--green);color:#fff}
-
-/* 阶段进度条 */
-.stage-bar{display:flex;padding:8px 12px;gap:2px;border-bottom:1px solid var(--border)}
-.stage-node{flex:1;text-align:center;font-size:10px;padding:4px 2px;color:var(--muted);border-bottom:2px solid transparent}
+/* 右栏 - Beacon AI */
+#right{width:var(--right-w);border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;flex-shrink:0}
+.ai-header{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ai-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.ai-status{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--green-bg);color:var(--green)}
+/* 阶段进度 */
+.stage-bar{display:flex;padding:6px 10px;gap:2px;border-bottom:1px solid var(--border)}
+.stage-node{flex:1;text-align:center;font-size:10px;padding:3px 1px;color:var(--text3);border-bottom:2px solid transparent;transition:var(--transition)}
 .stage-node.done{color:var(--green);border-color:var(--green)}
 .stage-node.active{color:var(--accent);border-color:var(--accent);font-weight:600}
-
-/* 对话消息 */
-.chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-.msg{max-width:90%;padding:8px 12px;border-radius:10px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-.msg.ai{background:var(--bg2);align-self:flex-start;border-bottom-left-radius:2px}
-.msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:2px}
-.msg.system{background:#fff3cd;align-self:center;font-size:12px;color:#856404;border-radius:6px;padding:4px 10px}
-.msg .msg-actions{margin-top:6px;display:flex;gap:6px}
-.msg .act-btn{padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:#fff}
-.msg .act-btn.confirm{color:var(--green);border-color:var(--green)}
-.msg .act-btn.correct{color:var(--yellow);border-color:var(--yellow)}
-.msg .act-btn.download{color:var(--accent);border-color:var(--accent);text-decoration:none;display:inline-block}
-
-/* 对话输入 */
-.chat-input-bar{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:8px}
-.chat-input-bar textarea{flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:none;max-height:80px;font-family:inherit}
-.chat-input-bar textarea:focus{border-color:var(--accent);outline:none}
-.chat-input-bar .send-btn{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px}
-.chat-input-bar .send-btn:hover{background:var(--accent-hover)}
-
 /* 上传区 */
-.chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;color:var(--muted)}
-.chat-dropzone{margin-top:12px;padding:24px;border:2px dashed var(--border);border-radius:12px;cursor:pointer;transition:.15s;width:100%}
-.chat-dropzone:hover,.chat-dropzone.dragover{border-color:var(--accent);background:rgba(99,102,241,.03)}
+.ai-upload{padding:16px;border-bottom:1px solid var(--border)}
+.ai-dropzone{padding:20px;border:1.5px dashed var(--border2);border-radius:var(--radius);text-align:center;cursor:pointer;transition:var(--transition)}
+.ai-dropzone:hover,.ai-dropzone.dragover{border-color:var(--accent);background:var(--accent-light)}
+.ai-dropzone .dz-icon{font-size:28px;margin-bottom:4px}
+.ai-dropzone .dz-text{font-size:13px;color:var(--text2)}
+.ai-dropzone .dz-hint{font-size:11px;color:var(--text3);margin-top:4px}
 .file-input{display:none}
-
-/* 转换面板 */
-.dropzone{padding:40px;border:2px dashed var(--border);border-radius:12px;text-align:center;cursor:pointer;transition:.15s}
-.dropzone:hover,.dropzone.dragover{border-color:var(--accent);background:rgba(99,102,241,.03)}
-.dz-icon{font-size:40px;margin-bottom:8px}
-.progress-steps{display:flex;gap:4px;margin:12px 0}
-.progress-steps .step{flex:1;text-align:center;font-size:11px;padding:4px;color:var(--muted);border-bottom:2px solid var(--border)}
-.progress-steps .step.done{color:var(--green);border-color:var(--green)}
-.progress-steps .step.active{color:var(--accent);border-color:var(--accent)}
-.progress-bar{height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;margin:12px 0}
-.progress-fill{height:100%;background:var(--accent);transition:width .5s;width:0%}
-.download-btn{display:inline-block;margin-top:12px;padding:8px 20px;background:var(--green);color:#fff;border-radius:8px;text-decoration:none;font-size:14px}
-
-/* 知识库 */
-.kn-list{list-style:none}
-.kn-item{padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.kn-item .kn-title{font-weight:500}
-.kn-item .kn-scope{font-size:11px;padding:2px 6px;border-radius:4px}
-.kn-scope.personal{background:#dbeafe;color:#1e40af}
-.kn-scope.enterprise{background:#dcfce7;color:#166534}
-
-/* 设置 */
-.setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
-.setting-row label{font-size:14px}
-.setting-row select,.setting-row input{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px}
-.save-btn{margin-top:12px;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer}
+/* 对话消息 */
+.ai-messages{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:92%;padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.msg.ai{background:var(--bg2);align-self:flex-start;border-bottom-left-radius:2px;color:var(--text)}
+.msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:2px}
+.msg.sys{background:var(--amber-bg);align-self:center;font-size:11px;color:#856404;border-radius:4px;padding:3px 10px}
+.msg-actions{margin-top:6px;display:flex;gap:6px}
+.act-btn{padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);transition:var(--transition)}
+.act-btn.green{color:var(--green);border-color:var(--green)}
+.act-btn.amber{color:var(--amber);border-color:var(--amber)}
+.act-btn.blue{color:var(--accent);border-color:var(--accent);text-decoration:none;display:inline-block}
+/* 输入栏 */
+.ai-input{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:8px}
+.ai-input textarea{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;resize:none;max-height:70px;font-family:var(--font)}
+.ai-input textarea:focus{border-color:var(--accent);outline:none}
+.ai-input .send-btn{padding:7px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;transition:var(--transition)}
+.ai-input .send-btn:hover{background:#5558e0}
 </style>
 </head>
 <body>
@@ -126,81 +123,102 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div id="login-view">
 <div class="login-card">
 <h1>Beacon专家</h1>
-<div class="sub">AI驱动 3D→2D 工程图转换</div>
-<div class="field">
-<label>用户名 / 邮箱</label>
-<input id="email" value="admin" onkeydown="if(event.key==='Enter')doAuth()">
-</div>
-<div class="field">
-<label>密码</label>
-<input id="password" type="password" value="123456" onkeydown="if(event.key==='Enter')doAuth()">
-</div>
+<div class="sub">AI驱动 3D→2D 工程图转换平台</div>
+<div class="field"><label>用户名</label><input id="email" value="admin" onkeydown="if(event.key==='Enter')doAuth()"></div>
+<div class="field"><label>密码</label><input id="password" type="password" value="123456" onkeydown="if(event.key==='Enter')doAuth()"></div>
 <button class="btn btn-primary" onclick="doAuth()">登录</button>
 <div class="err" id="auth-err"></div>
 </div>
 </div>
 
-<!-- === 主应用(wiki式三栏) === -->
-<div id="app-view">
-<div class="app-header">
-<div class="logo"><span class="icon">📐</span> Beacon专家</div>
-<div class="user-area">
-<span id="user-email"></span><span class="role" id="user-role"></span>
-<span class="logout" onclick="logout()">退出</span>
+<!-- === 主应用 === -->
+<header id="topbar">
+<div class="topbar-left">
+<span class="topbar-logo">📐 Beacon专家</span>
+<select class="workspace-select" onchange="switchWorkspace(this.value)">
+<option value="personal">个人空间</option>
+<option value="department">部门空间</option>
+<option value="enterprise">企业空间</option>
+</select>
+</div>
+<div class="topbar-right">
+<span id="user-name"></span>
+<span class="role-tag" id="user-role"></span>
+<span class="logout-link" onclick="logout()">退出</span>
+</div>
+</header>
+
+<div id="main">
+<!-- 左栏: 目录 -->
+<aside id="left">
+<div class="sidebar-section">知识目录</div>
+<div class="tree-item active" onclick="showPage('overview','零件总览')"><span class="tree-icon">📋</span> 零件总览</div>
+<div class="tree-item" onclick="showPage('knowledge','知识库')"><span class="tree-icon">📚</span> 知识库</div>
+<div class="tree-item" onclick="showPage('drawings','图纸库')"><span class="tree-icon">📊</span> 图纸库</div>
+<div class="tree-item" onclick="showPage('components','零部件库')"><span class="tree-icon">⚙</span> 零部件库</div>
+<div class="sidebar-section">系统</div>
+<div class="tree-item" onclick="showPage('settings','模型配置')"><span class="tree-icon">🔧</span> 模型配置</div>
+<div class="tree-item" onclick="showPage('memory','AI记忆')"><span class="tree-icon">🧠</span> AI记忆</div>
+</aside>
+
+<!-- 中栏: 内容 -->
+<main id="content">
+<div class="content-header">零件总览</div>
+<div class="content-meta">转换历史 · 知识库 · 图纸管理</div>
+<div class="content-body" id="content-body">
+<div class="card">
+<div class="card-title">📊 转换统计</div>
+<div class="card-body" id="stats-body">加载中...</div>
+</div>
+<div class="card">
+<div class="card-title">💡 使用说明</div>
+<div class="card-body">
+1. 在<span style="color:var(--accent)">右侧Beacon AI面板</span>上传STP文件<br>
+2. AI自动判断工艺类型，您可以确认或纠正<br>
+3. AI理解零件特征，生成标注方案<br>
+4. 确认后自动转换，AI审查加工就绪度<br>
+5. 下载DXF工程图
 </div>
 </div>
-<div class="app-body">
-<!-- 左栏 -->
-<div class="sidebar">
-<div class="nav-section">工作台</div>
-<div class="nav-item active" data-view="convert" onclick="switchView('convert')"><span class="nav-icon">⚙</span> 转换</div>
-<div class="nav-item" data-view="knowledge" onclick="switchView('knowledge')"><span class="nav-icon">📚</span> 知识库</div>
-<div class="nav-item" data-view="drawings" onclick="switchView('drawings')"><span class="nav-icon">📊</span> 图纸库</div>
-<div class="nav-section">设置</div>
-<div class="nav-item" data-view="settings" onclick="switchView('settings')"><span class="nav-icon">🔧</span> 模型配置</div>
 </div>
-<!-- 中栏 -->
-<div class="main-content" id="main-content"></div>
-<!-- 右栏:AI对话常驻 -->
-<div class="chat-panel">
-<div class="chat-header">
-<span class="ch-title">🤖 Beacon AI</span>
-<span class="ch-status" id="chat-status">就绪</span>
+</main>
+
+<!-- 右栏: Beacon AI + 转换 -->
+<aside id="right">
+<div class="ai-header">
+<span class="ai-title">🤖 Beacon AI</span>
+<span class="ai-status" id="ai-status">就绪</span>
 </div>
 <div class="stage-bar" id="stage-bar"></div>
-<div class="chat-messages" id="chat-messages">
-<div class="chat-empty">
-<div style="font-size:36px;margin-bottom:8px">📐</div>
-<div style="font-size:14px;margin-bottom:4px">上传STP开启AI对话</div>
-<div class="chat-dropzone" id="chat-dropzone" onclick="document.getElementById('chat-file-input').click()">
-<div style="font-size:24px;margin-bottom:4px">📁</div>
-<div style="font-size:13px">拖拽或点击上传</div>
-<div style="font-size:11px;margin-top:4px;opacity:.6">.stp / .step</div>
-<input type="file" id="chat-file-input" class="file-input" accept=".stp,.step">
+<div class="ai-upload" id="ai-upload">
+<div class="ai-dropzone" id="ai-dropzone" onclick="document.getElementById('ai-file').click()">
+<div class="dz-icon">📁</div>
+<div class="dz-text">上传STP文件开启AI对话</div>
+<div class="dz-hint">拖拽或点击 · .stp/.step · 最大50MB</div>
+<input type="file" id="ai-file" class="file-input" accept=".stp,.step">
 </div>
 </div>
+<div class="ai-messages" id="ai-messages"></div>
+<div class="ai-input">
+<textarea id="ai-input" rows="1" placeholder="输入消息 (Enter发送)" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
+<button class="send-btn" onclick="sendMsg()">发送</button>
 </div>
-<div class="chat-input-bar">
-<textarea id="chat-input" rows="1" placeholder="输入消息 (Enter发送)" onkeydown="handleChatKey(event)" oninput="autoGrow(this)"></textarea>
-<button class="send-btn" onclick="sendMessage()">发送</button>
+</aside>
 </div>
-</div>
-</div><!-- app-body -->
-</div><!-- app-view -->
 
 <script>
 const API='';
 let TOKEN=localStorage.getItem('beacon_token')||'';
 let USER=JSON.parse(localStorage.getItem('beacon_user')||'null');
-let chatSessionId=null,chatStage='init',pollTimer=null;
-const CHAT_STAGES=['init','classify','understand','plan','convert','audit','done'];
-const STAGE_LABEL={init:'上传',classify:'分类',understand:'理解',plan:'规划',convert:'转换',audit:'审计',done:'完成'};
+let convId=null,stage='init',poll=null;
+const STAGES=['init','classify','understand','plan','convert','audit','done'];
+const SLABEL={init:'上传',classify:'分类',understand:'理解',plan:'规划',convert:'转换',audit:'审计',done:'完成'};
 
-async function api(path,opts={}){
-  const h={...(opts.headers||{})};
+async function api(p,o={}){
+  const h={...(o.headers||{})};
   if(TOKEN)h['Authorization']='Bearer '+TOKEN;
-  if(opts.body&&!(opts.body instanceof FormData))h['Content-Type']='application/json';
-  const r=await fetch(API+path,{...opts,headers:h});
+  if(o.body&&!(o.body instanceof FormData))h['Content-Type']='application/json';
+  const r=await fetch(API+p,{...o,headers:h});
   const d=await r.json().catch(()=>({}));
   if(!r.ok){const det=Array.isArray(d.detail)?d.detail.map(x=>x.msg||JSON.stringify(x)).join('; '):(d.detail||'HTTP '+r.status);throw new Error(det);}
   return d;
@@ -208,13 +226,12 @@ async function api(path,opts={}){
 
 // === 登录 ===
 async function doAuth(){
-  const e=document.getElementById('email').value.trim();
-  const p=document.getElementById('password').value;
+  const e=document.getElementById('email').value.trim(),p=document.getElementById('password').value;
   const err=document.getElementById('auth-err');err.textContent='';
   if(!e||!p){err.textContent='请填写';return}
   try{
     const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:e,password:p})});
-    TOKEN=d.token;USER={id:d.user_id,role:d.role,email:e,username:d.username||e};
+    TOKEN=d.token;USER={id:d.user_id,role:d.role,username:d.username||e};
     localStorage.setItem('beacon_token',TOKEN);
     localStorage.setItem('beacon_user',JSON.stringify(USER));
     enterApp();
@@ -223,177 +240,162 @@ async function doAuth(){
 function logout(){localStorage.removeItem('beacon_token');localStorage.removeItem('beacon_user');location.reload()}
 function enterApp(){
   document.getElementById('login-view').style.display='none';
-  document.getElementById('app-view').style.display='flex';
-  document.getElementById('user-email').textContent=USER.username||USER.email;
+  document.querySelector('header').style.display='flex';
+  document.getElementById('main').style.display='flex';
+  document.getElementById('user-name').textContent=USER.username||USER.email;
   document.getElementById('user-role').textContent=USER.role;
-  updateStageBar();
-  switchView('convert');
-  setupChatDropzone();
+  renderStageBar();
+  loadStats();
+  setupUpload();
+}
+function switchWorkspace(ws){loadStats()}
+
+// === 左栏导航 ===
+function showPage(view,title){
+  document.querySelectorAll('.tree-item').forEach(n=>n.classList.toggle('active',n.onclick&&n.onclick.toString().includes(view)));
+  document.querySelector('.content-header').textContent=title;
+  const body=document.getElementById('content-body');
+  if(view==='overview')loadStats();
+  else if(view==='knowledge')loadKn(body);
+  else if(view==='drawings')loadDr(body);
+  else if(view==='components')loadCp(body);
+  else if(view==='settings')loadSet(body);
+  else if(view==='memory')loadMem(body);
 }
 
-function switchView(view){
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===view));
-  if(pollTimer){clearInterval(pollTimer);pollTimer=null}
-  const el=document.getElementById('main-content');
-  if(view==='convert')el.innerHTML=`
-    <div class="section-title">STP → DXF 转换</div>
-    <div class="card">
-    <div class="dropzone" id="conv-dz" onclick="document.getElementById('conv-file').click()">
-    <div class="dz-icon">📁</div><div>拖拽STP/STEP文件</div><div style="font-size:12px;color:var(--muted);margin-top:4px">或点击选择 · 最大50MB</div>
-    <input type="file" id="conv-file" class="file-input" accept=".stp,.step"></div>
-    <div id="conv-result"></div></div>`
-  else if(view==='knowledge')loadKnowledge(el)
-  else if(view==='drawings')loadDrawings(el)
-  else if(view==='settings')loadSettings(el)
-  if(view==='convert')setupConvDropzone()
-}
-function setupConvDropzone(){
-  const dz=document.getElementById('conv-dz');if(!dz)return;
-  const fi=document.getElementById('conv-file');
-  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.style.borderColor='var(--accent)'}));
-  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.style.borderColor=''}));
-  dz.addEventListener('drop',e=>{if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0])});
-  fi.addEventListener('change',e=>{if(e.target.files.length)handleFile(e.target.files[0])});
-}
-async function handleFile(file){
-  const fd=new FormData();fd.append('file',file);
-  document.getElementById('conv-result').innerHTML='<div>上传中...</div>';
+async function loadStats(){
+  const body=document.getElementById('content-body');
+  body.innerHTML='<div class="card"><div class="card-title">📊 转换统计</div><div class="card-body">加载中...</div></div>';
   try{
-    const d=await api('/api/convert/upload',{method:'POST',body:fd});
-    currentTaskId=d.task_id;
-    document.getElementById('conv-result').innerHTML=`<div>任务: ${d.task_id.slice(0,8)}... 状态: ${d.status}</div>`;
-    pollTask();
-  }catch(ex){document.getElementById('conv-result').innerHTML=`<div style="color:red">${ex.message}</div>`}
+    const h=await api('/api/health');
+    body.innerHTML=`
+    <div class="card"><div class="card-title">📊 系统状态</div><div class="card-body">
+    FreeCAD: <span class="tag tag-green">${h.freecadcmd.available?'✓可用':'✗不可用'}</span>
+    磁盘: ${h.disk_free_mb}MB空闲</div></div>
+    <div class="card"><div class="card-title">💡 使用说明</div><div class="card-body">
+    1. 在<span style="color:var(--accent)">右侧Beacon AI面板</span>上传STP文件<br>
+    2. AI自动判断工艺类型，可确认或纠正<br>
+    3. 确认后自动转换+审查<br>
+    4. 下载DXF工程图</div></div>`;
+  }catch(ex){body.innerHTML='<div class="card">'+ex.message+'</div>'}
 }
-function pollTask(){
-  if(pollTimer)clearInterval(pollTimer);
-  pollTimer=setInterval(async()=>{
-    try{
-      const d=await api('/api/convert/status/'+currentTaskId);
-      const r=document.getElementById('conv-result');
-      if(d.status==='done'&&d.dxf_ready){
-        r.innerHTML=`<div style="color:var(--green);font-size:16px;margin-bottom:8px">✅ 转换完成</div>
-        <a class="download-btn" href="${API}/api/convert/download/${currentTaskId}?token=${TOKEN}" target="_blank">下载DXF</a>`;
-        clearInterval(pollTimer);pollTimer=null;
-      }else if(d.status==='failed'){
-        r.innerHTML=`<div style="color:red">失败: ${d.error||'未知错误'}</div>`;
-        clearInterval(pollTimer);pollTimer=null;
-      }else{
-        r.innerHTML=`<div>状态: ${d.status}...</div>`;
-      }
-    }catch(ex){}
-  },2000);
+async function loadKn(b){
+  b.innerHTML='加载中...';
+  try{const d=await api('/api/knowledge/list');
+    b.innerHTML=(d.items||[]).map(k=>`<div class="card"><div class="card-title">${k.title}</div><div class="card-body"><span class="tag tag-${k.scope==='enterprise'?'green':'blue'}">${k.scope}</span></div></div>`).join('')||'<div class="card-body">暂无知识条目</div>'
+  }catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>'}
+}
+async function loadDr(b){
+  b.innerHTML='加载中...';
+  try{const d=await api('/api/drawings/');
+    b.innerHTML=`<div class="card"><div class="card-title">图纸库 (${d.total||0}件)</div></div>`+((d.items||[]).map(dr=>`<div class="card"><div class="card-title">${dr.name}</div><div class="card-body"><span class="tag tag-blue">${dr.process||'-'}</span></div></div>`).join(''))||'<div class="card-body">暂无图纸</div>'
+  }catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>'}
+}
+async function loadCp(b){b.innerHTML='<div class="card"><div class="card-title">零部件库</div><div class="card-body">标准件(压铆BSO/沉头M4/过孔) + 自定义件</div></div>'}
+async function loadSet(b){
+  b.innerHTML='加载中...';
+  try{const d=await api('/api/settings/llm');
+    b.innerHTML=`<div class="card"><div class="card-title">模型配置</div>
+    <div class="card-body">Provider: <strong>${d.provider||'-'}</strong><br>Model: <strong>${d.model||'-'}</strong><br>Base URL: ${d.base_url||'-'}<br>API Key: ${d.has_api_key?'✓已设置':'✗未设置'}</div></div>`
+  }catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>'}
+}
+async function loadMem(b){
+  b.innerHTML='加载中...';
+  try{const d=await api('/api/memory/');
+    b.innerHTML=`<div class="card"><div class="card-title">AI记忆 (${(d.items||d.total||0)}条)</div></div>`+((d.items||[]).map(m=>`<div class="card"><div class="card-title">${m.mem_type}</div><div class="card-body">${JSON.stringify(m.content).slice(0,100)}</div></div>`).join(''))||'<div class="card-body">暂无记忆</div>'
+  }catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>'}
 }
 
-async function loadKnowledge(el){
-  el.innerHTML='<div class="section-title">知识库</div><div class="card">加载中...</div>';
-  try{
-    const d=await api('/api/knowledge/list');
-    el.innerHTML='<div class="section-title">知识库</div>'+
-      d.items.map(k=>`<div class="kn-item"><span class="kn-title">${k.title}</span><span class="kn-scope ${k.scope}">${k.scope}</span></div>`).join('')||'<div class="card">暂无知识</div>';
-  }catch(ex){el.innerHTML='<div class="section-title">知识库</div><div class="card">'+ex.message+'</div>'}
-}
-async function loadDrawings(el){
-  el.innerHTML='<div class="section-title">图纸库</div><div class="card">加载中...</div>';
-  try{
-    const d=await api('/api/drawings/');
-    el.innerHTML='<div class="section-title">图纸库 ('+d.total+'件)</div>'+
-      (d.items||[]).map(dr=>`<div class="kn-item"><span class="kn-title">${dr.name}</span><span style="font-size:11px;color:var(--muted)">${dr.process||'-'}</span></div>`).join('')||'<div class="card">暂无图纸</div>';
-  }catch(ex){el.innerHTML='<div class="section-title">图纸库</div><div class="card">'+ex.message+'</div>'}
-}
-async function loadSettings(el){
-  el.innerHTML='<div class="section-title">模型配置</div><div class="card">加载中...</div>';
-  try{
-    const d=await api('/api/settings/llm');
-    el.innerHTML=`<div class="section-title">模型配置</div>
-    <div class="card">
-    <div class="setting-row"><label>Provider</label><select id="set-provider"><option value="zhipu">智谱GLM</option><option value="anthropic">Claude</option><option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option><option value="ollama">Ollama(本地)</option></select></div>
-    <div class="setting-row"><label>模型名</label><input id="set-model" value="${d.model||'glm-4.5-air'}"></div>
-    <div class="setting-row"><label>API Key</label><input id="set-key" type="password" placeholder="${d.has_api_key?'(已设置)':'输入Key'}"></div>
-    <div class="setting-row"><label>Base URL</label><input id="set-url" value="${d.base_url||''}" style="width:200px"></div>
-    <button class="save-btn" onclick="saveSettings()">保存</button>
-    </div>`;
-    if(d.provider)document.getElementById('set-provider').value=d.provider;
-  }catch(ex){el.innerHTML='<div class="section-title">模型配置</div><div class="card">'+ex.message+'</div>'}
-}
-async function saveSettings(){
-  try{
-    const body={provider:document.getElementById('set-provider').value,model:document.getElementById('set-model').value,base_url:document.getElementById('set-url').value};
-    const key=document.getElementById('set-key').value;if(key)body.api_key=key;
-    await api('/api/settings/llm',{method:'POST',body:JSON.stringify(body)});
-    alert('保存成功');
-  }catch(ex){alert(ex.message)}
-}
-
-// === AI对话(右栏常驻) ===
-function setupChatDropzone(){
-  const dz=document.getElementById('chat-dropzone');if(!dz)return;
-  const fi=document.getElementById('chat-file-input');
+// === 右栏: AI对话 ===
+function setupUpload(){
+  const dz=document.getElementById('ai-dropzone');
+  const fi=document.getElementById('ai-file');
   ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('dragover')}));
   ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('dragover')}));
   dz.addEventListener('drop',e=>{if(e.dataTransfer.files.length)startChat(e.dataTransfer.files[0])});
   fi.addEventListener('change',e=>{if(e.target.files.length)startChat(e.target.files[0])});
 }
 async function startChat(file){
-  addMsg('ai','📁 接收文件: '+file.name+'\n正在分析3D模型...');
-  document.getElementById('chat-messages').querySelector('.chat-empty')?.remove();
+  addMsg('ai','📁 接收: '+file.name+'\n分析中...');
+  document.getElementById('ai-upload').style.display='none';
   const fd=new FormData();fd.append('file',file);
   try{
     const d=await api('/api/chat/start',{method:'POST',body:fd});
-    chatSessionId=d.conversation_id;chatStage='classify';
-    addMsg('ai',d.message);
-    updateStageBar();
-  }catch(ex){addMsg('ai','❌ '+ex.message)}
+    convId=d.conversation_id;stage='classify';
+    addMsg('ai',d.message);renderStageBar();
+  }catch(ex){addMsg('ai','❌ '+ex.message);document.getElementById('ai-upload').style.display='block'}
 }
 function addMsg(role,content){
-  const msgs=document.getElementById('chat-messages');
+  const msgs=document.getElementById('ai-messages');
   const div=document.createElement('div');div.className='msg '+role;div.textContent=content;
-  // classify阶段加确认/纠正按钮
-  if(role==='ai'&&chatStage==='classify'&&content.includes('工艺')){
-    const actions=document.createElement('div');actions.className='msg-actions';
-    const ok=document.createElement('button');ok.className='act-btn confirm';ok.textContent='确认';ok.onclick=()=>confirmStage();
-    const no=document.createElement('button');no.className='act-btn correct';no.textContent='纠正';no.onclick=()=>{const p=prompt('请输入正确工艺(sheet_metal/injection_molding/machining/stamping/casting/welding/additive):');if(p)correctStage(p)};
-    actions.append(ok,no);div.appendChild(actions);
-  }
-  // plan阶段加确认
-  if(role==='ai'&&chatStage==='plan'&&content.includes('确认')){
-    const actions=document.createElement('div');actions.className='msg-actions';
-    const ok=document.createElement('button');ok.className='act-btn confirm';ok.textContent='执行转换';ok.onclick=()=>confirmStage();
-    actions.append(ok);div.appendChild(actions);
+  if(role==='ai'){
+    const text=content.toLowerCase();
+    if(stage==='classify'&&content.includes('工艺')){
+      const a=document.createElement('div');a.className='msg-actions';
+      const ok=document.createElement('button');ok.className='act-btn green';ok.textContent='确认';ok.onclick=()=>confirmStage();
+      const no=document.createElement('button');no.className='act-btn amber';no.textContent='纠正';no.onclick=()=>{const p=prompt('正确工艺:');if(p)correctStage(p)};
+      a.append(ok,no);div.appendChild(a);
+    }
+    if((stage==='plan'||stage==='audit')&&content.includes('确认')){
+      const a=document.createElement('div');a.className='msg-actions';
+      const ok=document.createElement('button');ok.className='act-btn green';ok.textContent=stage==='plan'?'执行转换':'确认接受';ok.onclick=()=>confirmStage();
+      a.append(ok);div.appendChild(a);
+    }
+    if(content.includes('DXF')&&content.includes('下载')){
+      const a=document.createElement('div');a.className='msg-actions';
+      const dl=document.createElement('a');dl.className='act-btn blue';dl.textContent='⬇ 下载DXF';
+      dl.href=API+'/api/convert/download/'+convId+'?token='+TOKEN;dl.target='_blank';
+      a.append(dl);div.appendChild(a);
+    }
   }
   msgs.append(div);msgs.scrollTop=msgs.scrollHeight;
 }
-async function sendMessage(){
-  const inp=document.getElementById('chat-input');const txt=inp.value.trim();if(!txt||!chatSessionId)return;
-  inp.value='';addMsg('user',txt);
-  try{
-    const d=await api('/api/chat/'+chatSessionId+'/message',{method:'POST',body:JSON.stringify({text:txt})});
-    chatStage=d.stage;addMsg('ai',d.message);updateStageBar();
+async function sendMsg(){
+  const inp=document.getElementById('ai-input');const txt=inp.value.trim();
+  if(!txt||!convId)return;inp.value='';
+  addMsg('user',txt);
+  try{const d=await api('/api/chat/'+convId+'/message',{method:'POST',body:JSON.stringify({text:txt})});
+    stage=d.stage;if(d.message)addMsg('ai',d.message);renderStageBar();
   }catch(ex){addMsg('ai','❌ '+ex.message)}
 }
 async function confirmStage(){
-  addMsg('user','确认');try{
-    const d=await api('/api/chat/'+chatSessionId+'/confirm',{method:'POST',body:JSON.stringify({})});
-    chatStage=d.stage;if(d.message)addMsg('ai',d.message);updateStageBar();
+  addMsg('user','确认');
+  try{const d=await api('/api/chat/'+convId+'/confirm',{method:'POST',body:JSON.stringify({})});
+    stage=d.stage;if(d.message)addMsg('ai',d.message);renderStageBar();
+    if(stage==='convert')pollConvert();
   }catch(ex){addMsg('ai','❌ '+ex.message)}
 }
-async function correctStage(process){
-  addMsg('user','纠正: '+process);try{
-    const d=await api('/api/chat/'+chatSessionId+'/correct',{method:'POST',body:JSON.stringify({process:process})});
+async function correctStage(p){
+  addMsg('user','纠正: '+p);
+  try{const d=await api('/api/chat/'+convId+'/correct',{method:'POST',body:JSON.stringify({process:p})});
     addMsg('ai',d.message);
   }catch(ex){addMsg('ai','❌ '+ex.message)}
 }
-function handleChatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
-function autoGrow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,80)+'px'}
-function updateStageBar(){
-  const bar=document.getElementById('stage-bar');if(!bar)return;
-  bar.innerHTML=CHAT_STAGES.map(s=>`<div class="stage-node ${s===chatStage?'active':''} ${(CHAT_STAGES.indexOf(s)<CHAT_STAGES.indexOf(chatStage))?'done':''}">${STAGE_LABEL[s]}</div>`).join('');
+function pollConvert(){
+  if(poll)clearInterval(poll);
+  poll=setInterval(async()=>{
+    try{
+      const d=await api('/api/convert/status/'+convId);
+      if(d.status==='done'&&d.dxf_ready){
+        clearInterval(poll);poll=null;
+        stage='done';renderStageBar();
+        addMsg('ai','✅ 转换完成！点击下载DXF。');
+      }
+    }catch(ex){}
+  },3000);
+}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftY){e.preventDefault();sendMsg()}}
+function autoGrow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,70)+'px'}
+function renderStageBar(){
+  document.getElementById('stage-bar').innerHTML=STAGES.map(s=>
+    `<div class="stage-node ${s===stage?'active':''} ${STAGES.indexOf(s)<STAGES.indexOf(stage)?'done':''}">${SLABEL[s]}</div>`
+  ).join('');
 }
 
 // === 启动 ===
-async function checkTokenAndEnter(){
-  if(TOKEN){try{await api('/api/auth/me');enterApp()}catch(e){localStorage.removeItem('beacon_token');localStorage.removeItem('beacon_user');TOKEN='';USER=null}}
+async function init(){
+  if(TOKEN){try{await api('/api/auth/me');enterApp()}catch(e){localStorage.clear();TOKEN='';USER=null}}
 }
-checkTokenAndEnter();
+init();
 </script>
 </body></html>"""
