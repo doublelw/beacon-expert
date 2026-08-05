@@ -1,0 +1,1746 @@
+{
+ "source": "/Users/ahs/projects/Beacon/beacon-expert/storage/tasks/bafccfd6182f47d2b7956c9391fda02d//后壳.stp",
+ "method": "veritas_v1",
+ "process": "sheet_metal",
+ "bbox": {
+  "xmin": -112.0,
+  "ymin": -70.2,
+  "zmin": -40.2,
+  "xmax": 130.0,
+  "ymax": 69.0,
+  "zmax": -8.3
+ },
+ "thickness_axis": "Z",
+ "thickness": 31.9,
+ "sheet_thickness": 2.5,
+ "sheet_normal": [
+  0.707,
+  0.707,
+  0.0
+ ],
+ "features": [
+  {
+   "id": "F0001",
+   "type": "PIERCING",
+   "axis_dir": "X",
+   "direction": "X+",
+   "position": [
+    -109.5,
+    3.8,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0002",
+   "type": "PIERCING",
+   "axis_dir": "X",
+   "direction": "X+",
+   "position": [
+    -102.0,
+    -28.2,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0003",
+   "type": "PIERCING",
+   "axis_dir": "X",
+   "direction": "X+",
+   "position": [
+    120.0,
+    -50.0,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0004",
+   "type": "PIERCING",
+   "axis_dir": "X",
+   "direction": "X+",
+   "position": [
+    120.0,
+    -0.0,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0005",
+   "type": "PIERCING",
+   "axis_dir": "X",
+   "direction": "X+",
+   "position": [
+    120.0,
+    50.0,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0006",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    -91.3,
+    13.3,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0007",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    -82.0,
+    -60.2,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0008",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    -50.5,
+    62.9,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0009",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    -50.0,
+    -60.2,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0010",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    7.0,
+    -60.2,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0011",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    7.0,
+    64.0,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0012",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    63.5,
+    69.0,
+    -32.5
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 2.5,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0013",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    86.5,
+    69.0,
+    -32.5
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 2.5,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0014",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    114.946,
+    59.0,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0015",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    116.5,
+    -60.2,
+    -13.7
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": false,
+   "span": 1.498,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0016",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -107.0,
+    -50.15,
+    -13.664
+   ],
+   "radius": 2.5,
+   "diameter": 5.0,
+   "all_radii": [
+    2.5,
+    5.0
+   ],
+   "through": true,
+   "span": 16.4,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0017",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -107.0,
+    13.3,
+    -13.664
+   ],
+   "radius": 2.5,
+   "diameter": 5.0,
+   "all_radii": [
+    2.5,
+    5.0
+   ],
+   "through": true,
+   "span": 16.4,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0018",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -99.0,
+    -52.2,
+    -26.3
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0,
+    2.5,
+    2.7,
+    4.0
+   ],
+   "through": true,
+   "span": 4.0,
+   "source": "understand",
+   "hole_type": "thread"
+  },
+  {
+   "id": "F0019",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -91.951,
+    -65.2,
+    -13.664
+   ],
+   "radius": 2.5,
+   "diameter": 5.0,
+   "all_radii": [
+    2.5,
+    5.0
+   ],
+   "through": true,
+   "span": 16.4,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0020",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -72.5,
+    20.8,
+    -13.664
+   ],
+   "radius": 2.5,
+   "diameter": 5.0,
+   "all_radii": [
+    2.5,
+    5.0
+   ],
+   "through": true,
+   "span": 19.9,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0021",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -65.0,
+    64.0,
+    -13.664
+   ],
+   "radius": 2.5,
+   "diameter": 5.0,
+   "all_radii": [
+    2.5,
+    5.0
+   ],
+   "through": true,
+   "span": 16.4,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0022",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    16.5,
+    -63.1,
+    -5.1
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": true,
+   "span": 0.995,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "-Z"
+  },
+  {
+   "id": "F0023",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    27.5,
+    -37.0,
+    -26.085
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0,
+    2.4,
+    2.5,
+    3.0
+   ],
+   "through": true,
+   "span": 17.3,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0024",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    27.5,
+    61.0,
+    -26.085
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0,
+    2.4,
+    2.5,
+    3.0
+   ],
+   "through": true,
+   "span": 17.3,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0025",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    55.5,
+    57.0,
+    -79.308
+   ],
+   "radius": 3.0,
+   "diameter": 6.0,
+   "all_radii": [
+    3.0
+   ],
+   "through": true,
+   "span": 1.0,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0026",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    63.5,
+    -52.949,
+    -5.1
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": true,
+   "span": 0.995,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "-Z"
+  },
+  {
+   "id": "F0027",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    75.0,
+    60.5,
+    -35.629
+   ],
+   "radius": 1.5,
+   "diameter": 3.0,
+   "all_radii": [
+    1.5,
+    2.0,
+    2.11,
+    3.15
+   ],
+   "through": true,
+   "span": 2.5,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "-Z"
+  },
+  {
+   "id": "F0028",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    94.5,
+    57.0,
+    -79.308
+   ],
+   "radius": 3.0,
+   "diameter": 6.0,
+   "all_radii": [
+    3.0
+   ],
+   "through": true,
+   "span": 1.0,
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0029",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    102.5,
+    -37.0,
+    -26.085
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0,
+    2.4,
+    2.5,
+    3.0
+   ],
+   "through": true,
+   "span": 17.3,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0030",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    102.5,
+    61.0,
+    -26.085
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0,
+    2.4,
+    2.5,
+    3.0
+   ],
+   "through": true,
+   "span": 17.3,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0031",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    110.5,
+    -63.1,
+    -5.1
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0
+   ],
+   "through": true,
+   "span": 0.995,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "-Z"
+  },
+  {
+   "id": "F0032",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    117.5,
+    -37.0,
+    -37.8
+   ],
+   "radius": 2.0,
+   "diameter": 4.0,
+   "all_radii": [
+    2.0,
+    2.5,
+    2.7,
+    4.0
+   ],
+   "through": true,
+   "span": 4.0,
+   "source": "understand",
+   "hole_type": "thread"
+  },
+  {
+   "id": "F0033",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    125.0,
+    -65.2,
+    -13.664
+   ],
+   "radius": 2.5,
+   "diameter": 5.0,
+   "all_radii": [
+    2.5,
+    5.0
+   ],
+   "through": true,
+   "span": 28.4,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0034",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    125.0,
+    64.0,
+    -13.664
+   ],
+   "radius": 2.5,
+   "diameter": 5.0,
+   "all_radii": [
+    2.5,
+    5.0
+   ],
+   "through": true,
+   "span": 28.4,
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0035",
+   "type": "BEND",
+   "face": 21,
+   "radius": 5.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    125.0,
+    64.0,
+    -66.098
+   ],
+   "span": 31.9,
+   "bend_angle": 90.0,
+   "source": "cylinder_face"
+  },
+  {
+   "id": "F0036",
+   "type": "BEND",
+   "face": 26,
+   "radius": 5.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -65.0,
+    64.0,
+    -66.098
+   ],
+   "span": 19.9,
+   "bend_angle": 90.0,
+   "source": "cylinder_face"
+  },
+  {
+   "id": "F0037",
+   "type": "BEND",
+   "face": 30,
+   "radius": 5.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -107.0,
+    13.3,
+    -66.098
+   ],
+   "span": 19.9,
+   "bend_angle": 90.0,
+   "source": "cylinder_face"
+  },
+  {
+   "id": "F0038",
+   "type": "BEND",
+   "face": 32,
+   "radius": 5.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -107.0,
+    -50.15,
+    -66.098
+   ],
+   "span": 19.9,
+   "bend_angle": 45.0,
+   "source": "cylinder_face"
+  },
+  {
+   "id": "F0039",
+   "type": "BEND",
+   "face": 34,
+   "radius": 5.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -91.951,
+    -65.2,
+    -66.098
+   ],
+   "span": 19.9,
+   "bend_angle": 45.0,
+   "source": "cylinder_face"
+  },
+  {
+   "id": "F0040",
+   "type": "BEND",
+   "face": 48,
+   "radius": 5.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -72.5,
+    20.8,
+    -66.098
+   ],
+   "span": 16.4,
+   "bend_angle": 90.0,
+   "source": "cylinder_face"
+  },
+  {
+   "id": "F0041",
+   "type": "BEND",
+   "face": 64,
+   "radius": 5.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    125.0,
+    -65.2,
+    -66.098
+   ],
+   "span": 31.9,
+   "bend_angle": 90.0,
+   "source": "cylinder_face"
+  },
+  {
+   "id": "F0042",
+   "type": "CHAMFER",
+   "face": 2,
+   "radius": 3.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -91.951,
+    -65.2,
+    -8.8
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0043",
+   "type": "CHAMFER",
+   "face": 41,
+   "radius": 3.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -107.0,
+    -50.15,
+    -8.8
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0044",
+   "type": "CHAMFER",
+   "face": 43,
+   "radius": 3.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -107.0,
+    13.3,
+    -8.8
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0045",
+   "type": "CHAMFER",
+   "face": 47,
+   "radius": 4.5,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    -72.5,
+    20.8,
+    -8.8
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0046",
+   "type": "CHAMFER",
+   "face": 51,
+   "radius": 3.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -65.0,
+    64.0,
+    -8.8
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0047",
+   "type": "CHAMFER",
+   "face": 54,
+   "radius": 3.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    125.0,
+    64.0,
+    -8.8
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0048",
+   "type": "CHAMFER",
+   "face": 58,
+   "radius": 3.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    125.0,
+    -65.2,
+    -8.8
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0049",
+   "type": "CHAMFER",
+   "face": 66,
+   "radius": 2.751,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    129.499,
+    -50.0,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0050",
+   "type": "CHAMFER",
+   "face": 67,
+   "radius": 2.751,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    129.499,
+    -50.0,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0051",
+   "type": "CHAMFER",
+   "face": 70,
+   "radius": 2.751,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    129.499,
+    -0.0,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0052",
+   "type": "CHAMFER",
+   "face": 71,
+   "radius": 2.751,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    129.499,
+    -0.0,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0053",
+   "type": "CHAMFER",
+   "face": 74,
+   "radius": 2.751,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    129.499,
+    50.0,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0054",
+   "type": "CHAMFER",
+   "face": 75,
+   "radius": 2.751,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    129.499,
+    50.0,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0055",
+   "type": "CHAMFER",
+   "face": 82,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    116.5,
+    -69.699,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0056",
+   "type": "CHAMFER",
+   "face": 83,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    116.5,
+    -69.699,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0057",
+   "type": "CHAMFER",
+   "face": 96,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    -91.3,
+    17.799,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0058",
+   "type": "CHAMFER",
+   "face": 97,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    -91.3,
+    17.799,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0059",
+   "type": "CHAMFER",
+   "face": 101,
+   "radius": 2.751,
+   "axis": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    -111.499,
+    -28.2,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0060",
+   "type": "CHAMFER",
+   "face": 102,
+   "radius": 2.751,
+   "axis": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    -111.499,
+    -28.2,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0061",
+   "type": "CHAMFER",
+   "face": 104,
+   "radius": 2.751,
+   "axis": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    -111.499,
+    3.8,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0062",
+   "type": "CHAMFER",
+   "face": 105,
+   "radius": 2.751,
+   "axis": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    -111.499,
+    3.8,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0063",
+   "type": "CHAMFER",
+   "face": 109,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    7.0,
+    -69.699,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0064",
+   "type": "CHAMFER",
+   "face": 110,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    7.0,
+    -69.699,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0065",
+   "type": "CHAMFER",
+   "face": 113,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    -50.0,
+    -69.699,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0066",
+   "type": "CHAMFER",
+   "face": 114,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    -50.0,
+    -69.699,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0067",
+   "type": "CHAMFER",
+   "face": 117,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    -82.0,
+    -69.699,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0068",
+   "type": "CHAMFER",
+   "face": 118,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    -82.0,
+    -69.699,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0069",
+   "type": "CHAMFER",
+   "face": 134,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    114.946,
+    68.499,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0070",
+   "type": "CHAMFER",
+   "face": 135,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    114.946,
+    68.499,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0071",
+   "type": "CHAMFER",
+   "face": 142,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    7.0,
+    68.499,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0072",
+   "type": "CHAMFER",
+   "face": 143,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    7.0,
+    68.499,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0073",
+   "type": "CHAMFER",
+   "face": 154,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    -50.5,
+    68.499,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0074",
+   "type": "CHAMFER",
+   "face": 155,
+   "radius": 2.751,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    -50.5,
+    68.499,
+    -13.7
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0075",
+   "type": "CHAMFER",
+   "face": 170,
+   "radius": 2.752,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    63.5,
+    -52.949,
+    -39.448
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0076",
+   "type": "CHAMFER",
+   "face": 171,
+   "radius": 2.752,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    63.5,
+    -52.949,
+    -39.448
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0077",
+   "type": "CHAMFER",
+   "face": 174,
+   "radius": 2.752,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    110.5,
+    -63.1,
+    -39.448
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0078",
+   "type": "CHAMFER",
+   "face": 175,
+   "radius": 2.752,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    110.5,
+    -63.1,
+    -39.448
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0079",
+   "type": "CHAMFER",
+   "face": 178,
+   "radius": 2.752,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    16.5,
+    -63.1,
+    -39.448
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0080",
+   "type": "CHAMFER",
+   "face": 179,
+   "radius": 2.752,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    16.5,
+    -63.1,
+    -39.448
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0081",
+   "type": "CHAMFER",
+   "face": 201,
+   "radius": 2.25,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    27.5,
+    61.0,
+    -20.45
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0082",
+   "type": "CHAMFER",
+   "face": 202,
+   "radius": 2.25,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    27.5,
+    61.0,
+    -20.45
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0083",
+   "type": "CHAMFER",
+   "face": 220,
+   "radius": 2.25,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    102.5,
+    61.0,
+    -20.45
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0084",
+   "type": "CHAMFER",
+   "face": 221,
+   "radius": 2.25,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    102.5,
+    61.0,
+    -20.45
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0085",
+   "type": "CHAMFER",
+   "face": 239,
+   "radius": 2.25,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    102.5,
+    -37.0,
+    -20.45
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0086",
+   "type": "CHAMFER",
+   "face": 240,
+   "radius": 2.25,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    102.5,
+    -37.0,
+    -20.45
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0087",
+   "type": "CHAMFER",
+   "face": 258,
+   "radius": 2.25,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    27.5,
+    -37.0,
+    -20.45
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0088",
+   "type": "CHAMFER",
+   "face": 259,
+   "radius": 2.25,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    27.5,
+    -37.0,
+    -20.45
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0089",
+   "type": "CHAMFER",
+   "face": 273,
+   "radius": 3.0,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    75.0,
+    60.5,
+    -36.85
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0090",
+   "type": "CHAMFER",
+   "face": 274,
+   "radius": 3.0,
+   "axis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "center": [
+    75.0,
+    60.5,
+    -36.85
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0091",
+   "type": "OUTLINE",
+   "bbox": [
+    -112.0,
+    -70.2,
+    -40.2,
+    130.0,
+    69.0,
+    -8.3
+   ],
+   "width": 242.0,
+   "height": 139.2,
+   "depth": 31.9
+  }
+ ],
+ "summary": {
+  "total_features": 91,
+  "by_type": {
+   "PIERCING": 34,
+   "BEND": 7,
+   "CHAMFER": 49,
+   "OUTLINE": 1
+  },
+  "holes_by_axis": {
+   "X": 5,
+   "Y": 10,
+   "Z": 19
+  },
+  "bends": 7,
+  "stamps": 0,
+  "chamfers": 49,
+  "fillets_excluded": 0
+ }
+}

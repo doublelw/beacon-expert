@@ -41,6 +41,9 @@ FC_BIN = _find_freecadcmd()
 SAAS_CORE = Path("/Users/ahs/project/Beacon/saas/core")
 SAAS_OUTPUT = Path("/Users/ahs/project/Beacon/saas/output")
 
+# === GB 机械制图国标知识 skill (LLM 上下文来源) ===
+GB_SKILL_DIR = Path.home() / ".claude" / "skills" / "gb-mechanical-drawing"
+
 # === 上传限制 ===
 MAX_UPLOAD_MB = 50
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024

@@ -3,14 +3,14 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from src.config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_HOURS
 from src.database import get_db, User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 ROLE_HIERARCHY = {"admin": 4, "dept_manager": 3, "engineer": 2, "viewer": 1}
 
@@ -38,9 +38,13 @@ def decode_token(token: str) -> dict:
 
 def get_current_user(
     creds: HTTPAuthorizationCredentials = Depends(security),
+    token: str = Query(default=None, description="下载链接等无法设header时用query token"),
     db: Session = Depends(get_db),
 ) -> User:
-    payload = decode_token(creds.credentials)
+    tok = (creds.credentials if creds else None) or token
+    if not tok:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    payload = decode_token(tok)
     user = db.query(User).filter(User.id == int(payload["sub"])).first()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户不存在或已禁用")

@@ -26,7 +26,7 @@ async def call_llm(prompt: str, model: str = None, system: str = "", max_tokens:
     messages.append({"role": "user", "content": prompt})
     body = {"model": model, "max_tokens": max_tokens, "messages": messages, "temperature": temperature}
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=60) as client:
         try:
             r = await client.post(f"{base_url}/v1/messages", headers=headers, json=body)
             r.raise_for_status()

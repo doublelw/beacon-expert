@@ -73,13 +73,18 @@ def _run_conversion(task_id: str, stp_path: str, work_dir: str):
         )
 
         # M1: veritas
-        subprocess.run(
+        veritas_proc = subprocess.run(
             [fc_bin, f"{saas_core}/veritas.py"],
             env=env,
             capture_output=True,
             timeout=120,
             cwd=work_dir,
         )
+        if veritas_proc.returncode != 0:
+            task.status = "failed"
+            task.error = f"veritas failed: {veritas_proc.stderr.decode()[:500]}"
+            db.commit()
+            return
         task.veritas_path = f"{work_dir}/veritas.json"
         task.status = "classifying"
         task.heartbeat = datetime.now(timezone.utc)
@@ -87,13 +92,18 @@ def _run_conversion(task_id: str, stp_path: str, work_dir: str):
 
         # M3: projection
         env["OUT"] = f"{work_dir}/proj_v3.json"
-        subprocess.run(
+        proj_proc = subprocess.run(
             [fc_bin, f"{saas_core}/projection_v3.py"],
             env=env,
             capture_output=True,
             timeout=600,
             cwd=work_dir,
         )
+        if proj_proc.returncode != 0:
+            task.status = "failed"
+            task.error = f"projection failed: {proj_proc.stderr.decode()[:500]}"
+            db.commit()
+            return
         task.proj_path = f"{work_dir}/proj_v3.json"
         task.status = "rendering"
         task.heartbeat = datetime.now(timezone.utc)
@@ -101,8 +111,8 @@ def _run_conversion(task_id: str, stp_path: str, work_dir: str):
 
         # M4-6: render
         dxf_path = f"{work_dir}/output.dxf"
-        geom_path = "/Users/ahs/project/Beacon/saas/output/clean_geom.json"
-        subprocess.run(
+        geom_path = f"{work_dir}/clean_geom.json"
+        render_proc = subprocess.run(
             [
                 "python3",
                 f"{saas_core}/render_engine.py",
@@ -117,6 +127,11 @@ def _run_conversion(task_id: str, stp_path: str, work_dir: str):
             timeout=60,
             cwd=work_dir,
         )
+        if render_proc.returncode != 0:
+            task.status = "failed"
+            task.error = f"render failed: {render_proc.stderr.decode()[:500]}"
+            db.commit()
+            return
 
         task.dxf_path = dxf_path
         task.status = "done"

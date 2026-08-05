@@ -26,6 +26,7 @@ HTML = r"""<!DOCTYPE html>
   --transition:all .2s cubic-bezier(.4,0,.2,1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
 body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
 
 /* === 登录 === */
@@ -98,6 +99,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .ai-dropzone .dz-text{font-size:13px;color:var(--text2)}
 .ai-dropzone .dz-hint{font-size:11px;color:var(--text3);margin-top:4px}
 .file-input{display:none}
+/* 输出文件区(持久下载位置) */
+.ai-files{padding:8px 12px;border-bottom:1px solid var(--border);display:none;max-height:140px;overflow-y:auto;background:var(--bg2)}
+.ai-files.show{display:block}
+.ai-files .af-title{font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.ai-file-row{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:4px}
+.ai-file-row .af-icon{font-size:15px}
+.ai-file-row .af-name{flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-file-row .af-meta{font-size:10px;color:var(--text3)}
+.ai-file-row .af-dl{font-size:11px;padding:3px 10px;border-radius:4px;background:var(--accent);color:#fff;text-decoration:none;flex-shrink:0}
 /* 对话消息 */
 .ai-messages{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
 .msg{max-width:92%;padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
@@ -127,9 +137,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="login-card">
 <h1>Beacon专家</h1>
 <div class="sub">AI驱动 3D→2D 工程图转换平台</div>
-<div class="field"><label>用户名</label><input id="email" value="admin" onkeydown="if(event.key==='Enter')doAuth()"></div>
-<div class="field"><label>密码</label><input id="password" type="password" value="123456" onkeydown="if(event.key==='Enter')doAuth()"></div>
-<button class="btn btn-primary" onclick="doAuth()">登录</button>
+<div class="field"><label>用户名</label><input id="email" value="admin" onkeydown="if(event.key==='Enter'){event.preventDefault();doAuth()}"></div>
+<div class="field"><label>密码</label><input id="password" type="password" value="123456" onkeydown="if(event.key==='Enter'){event.preventDefault();doAuth()}"></div>
+<button class="btn btn-primary" type="button" onclick="doAuth()">登录</button>
 <div class="err" id="auth-err"></div>
 </div>
 </div>
@@ -156,6 +166,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <aside id="left">
 <div class="sidebar-section">知识目录</div>
 <div class="tree-item active" onclick="showPage('overview','零件总览')"><span class="tree-icon">📋</span> 零件总览</div>
+<div class="tree-item" onclick="showPage('projects','项目')"><span class="tree-icon">📁</span> 项目</div>
 <div class="tree-item" onclick="showPage('knowledge','知识库')"><span class="tree-icon">📚</span> 知识库</div>
 <div class="tree-item" onclick="showPage('drawings','图纸库')"><span class="tree-icon">📊</span> 图纸库</div>
 <div class="tree-item" onclick="showPage('components','零部件库')"><span class="tree-icon">⚙</span> 零部件库</div>
@@ -203,6 +214,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <input type="file" id="ai-file" class="file-input" accept=".stp,.step">
 </div>
 </div>
+<div id="ai-files" class="ai-files"></div>
 <div class="ai-messages" id="ai-messages"></div>
 <div class="ai-input">
 <textarea id="ai-input" rows="1" placeholder="输入消息 (Enter发送)" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
@@ -215,7 +227,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 const API='';
 let TOKEN=localStorage.getItem('beacon_token')||'';
 let USER=JSON.parse(localStorage.getItem('beacon_user')||'null');
-let convId=null,stage='init',poll=null;
+let convId=null,stage='init',poll=null,pollChat=null,lastMsgCount=0,uploadedName='';
 const STAGES=['init','classify','understand','plan','convert','audit','done'];
 const SLABEL={init:'上传',classify:'分类',understand:'理解',plan:'规划',convert:'转换',audit:'审计',done:'完成'};
 
@@ -234,13 +246,20 @@ async function doAuth(){
   const e=document.getElementById('email').value.trim(),p=document.getElementById('password').value;
   const err=document.getElementById('auth-err');err.textContent='';
   if(!e||!p){err.textContent='请填写';return}
+  err.textContent='登录中...';
   try{
-    const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:e,password:p})});
+    const r=await fetch('/api/auth/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:e,password:p})
+    });
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
     TOKEN=d.token;USER={id:d.user_id,role:d.role,username:d.username||e};
     localStorage.setItem('beacon_token',TOKEN);
     localStorage.setItem('beacon_user',JSON.stringify(USER));
     enterApp();
-  }catch(ex){err.textContent=ex.message}
+  }catch(ex){err.textContent='错误: '+ex.message}
 }
 function logout(){localStorage.removeItem('beacon_token');localStorage.removeItem('beacon_user');location.reload()}
 function enterApp(){
@@ -261,11 +280,64 @@ function showPage(view,title){
   document.querySelector('.content-header').textContent=title;
   const body=document.getElementById('content-body');
   if(view==='overview')loadStats();
+  else if(view==='projects')loadProjects(body);
   else if(view==='knowledge')loadKn(body);
   else if(view==='drawings')loadDr(body);
   else if(view==='components')loadCp(body);
   else if(view==='settings')loadSet(body);
   else if(view==='memory')loadMem(body);
+}
+
+// === 项目管理 ===
+async function loadProjects(b){
+  b.innerHTML='加载中...';
+  let list=[];
+  try{const d=await api('/api/projects');list=d.items||d||[];}catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>';return}
+  b.innerHTML=`
+  <div class="card"><div class="card-title">➕ 新建项目</div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:8px;max-width:520px">
+      <input id="np-name" placeholder="项目名称 (如:后壳系列)" style="padding:8px;border:1px solid var(--border2);border-radius:6px">
+      <input id="np-workdir" placeholder="工作目录绝对路径 (如:/Users/ahs/projects/后壳系列)" style="padding:8px;border:1px solid var(--border2);border-radius:6px">
+      <button class="act-btn blue" onclick="createProject()" style="padding:8px 16px;align-self:flex-start">创建项目</button>
+      <div style="font-size:11px;color:var(--text3)">项目所有文件(STP输入/DXF输出/技术要求)存到该工作目录, 系统记忆路径。</div>
+    </div></div>
+  <div class="card"><div class="card-title">📂 项目列表 (${list.length})</div><div id="proj-list" class="card-body"></div></div>`;
+  renderProjList(list);
+}
+function renderProjList(list){
+  const el=document.getElementById('proj-list');if(!el)return;
+  if(!list.length){el.innerHTML='暂无项目';return}
+  el.innerHTML=list.map(p=>{const tr=p.tech_reqs||{};return `<div style="padding:10px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer" onclick="openProject(${p.id})">
+    <div style="font-weight:600">${p.name} ${p.status==='archived'?'<span style="color:var(--text3);font-size:11px">(归档)</span>':''}</div>
+    <div style="font-size:11px;color:var(--text3)">📁 ${p.work_dir||'(无工作目录)'}</div>
+    <div style="font-size:11px;color:var(--text2);margin-top:4px">材料:${tr.material||'-'} · 公差:${tr.tolerance||'-'} · 量级:${tr.volume||'-'}</div>
+  </div>`}).join('');
+}
+async function createProject(){
+  const name=document.getElementById('np-name').value.trim(),wd=document.getElementById('np-workdir').value.trim();
+  if(!name||!wd){alert('需填名称和工作目录(绝对路径)');return}
+  try{await api('/api/projects',{method:'POST',body:JSON.stringify({name,work_dir:wd})});loadProjects(document.getElementById('content-body'));}
+  catch(ex){alert('创建失败:'+ex.message)}
+}
+async function openProject(pid){
+  const body=document.getElementById('content-body');body.innerHTML='加载中...';
+  try{
+    const p=await api('/api/projects/'+pid);
+    const files=await api('/api/projects/'+pid+'/files').catch(()=>({items:[]}));
+    const fis=files.items||[];
+    const tr=p.tech_reqs||{};
+    body.innerHTML=`<div class="card"><div class="card-title">📂 ${p.name}</div><div class="card-body">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px">📁 工作目录: ${p.work_dir}</div>
+      <div style="font-size:13px">材料:${tr.material||'-'} · 公差:${tr.tolerance||'-'} · 量级:${tr.volume||'-'} · 优先:${tr.priority||'-'} · 特殊:${tr.special||'-'}</div>
+    </div></div>
+    <div class="card"><div class="card-title">📁 文件列表 (${fis.length})</div><div class="card-body">${fis.length?fis.map(f=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${f.name||'?'}</span> <span style="font-size:11px;color:${f.dxf_ready?'var(--green)':'var(--text3)'}">${f.dxf_ready?'✓ 已出DXF':'· 未转换'}</span></div>`).join(''):'<div style="font-size:13px;color:var(--text3)">暂无文件</div>'}</div></div>
+    <div class="card"><div class="card-title">➕ 添加 STP 到项目</div><div class="card-body"><input type="file" id="proj-file" accept=".stp,.step" style="font-size:12px"> <button class="act-btn blue" onclick="addProjFile(${pid})" style="padding:6px 12px">上传</button></div></div>`;
+  }catch(ex){body.innerHTML='<div class="card">'+ex.message+'</div>'}
+}
+async function addProjFile(pid){
+  const f=document.getElementById('proj-file').files[0];if(!f)return;
+  const fd=new FormData();fd.append('file',f);
+  try{await api('/api/projects/'+pid+'/files',{method:'POST',body:fd});openProject(pid);}catch(ex){alert('上传失败:'+ex.message)}
 }
 
 async function loadStats(){
@@ -298,11 +370,45 @@ async function loadDr(b){
 }
 async function loadCp(b){b.innerHTML='<div class="card"><div class="card-title">零部件库</div><div class="card-body">标准件(压铆BSO/沉头M4/过孔) + 自定义件</div></div>'}
 async function loadSet(b){
-  b.innerHTML='加载中...';
-  try{const d=await api('/api/settings/llm');
-    b.innerHTML=`<div class="card"><div class="card-title">模型配置</div>
-    <div class="card-body">Provider: <strong>${d.provider||'-'}</strong><br>Model: <strong>${d.model||'-'}</strong><br>Base URL: ${d.base_url||'-'}<br>API Key: ${d.has_api_key?'✓已设置':'✗未设置'}</div></div>`
-  }catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>'}
+  let d;
+  try{d=await api('/api/settings/llm')}catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>';return}
+  const p=d.provider||'zhipu',m=d.model||'',u=d.base_url||'';
+  const keyPh=d.has_api_key?'已设置（••••），留空=保留原值':'输入API Key';
+  const opts=d.available_providers.map(x=>`<option value="${x}" ${x===p?'selected':''}>${x}</option>`).join('');
+  const inp='width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);font-size:14px;box-sizing:border-box';
+  b.innerHTML=`<div class="card"><div class="card-title">模型配置</div>
+  <div class="card-body">
+    <div style="display:grid;gap:12px;max-width:520px">
+      <div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">Provider</label>
+        <select id="cfg-provider" style="${inp}">${opts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">Model</label>
+        <input id="cfg-model" value="${m}" style="${inp}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">Base URL</label>
+        <input id="cfg-baseurl" value="${u}" style="${inp}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">API Key</label>
+        <input id="cfg-apikey" type="password" placeholder="${keyPh}" autocomplete="new-password" style="${inp}"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="act-btn blue" onclick="saveCfg()" style="padding:8px 16px;font-size:13px">保存配置</button>
+        <button class="act-btn" onclick="testCfg()" style="padding:8px 16px;font-size:13px">测试连接</button>
+        <span id="cfg-status" style="font-size:13px"></span>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">🔒 API Key 仅本地存储，界面始终星标隐藏，无法查看/复制，仅显示"是否有效"。</div>
+    </div>
+  </div></div>`;
+}
+async function saveCfg(){
+  const s=document.getElementById('cfg-status');s.textContent='保存中…';s.style.color='var(--text3)';
+  const body={provider:document.getElementById('cfg-provider').value,model:document.getElementById('cfg-model').value.trim(),base_url:document.getElementById('cfg-baseurl').value.trim(),api_key:document.getElementById('cfg-apikey').value};
+  try{const r=await api('/api/settings/llm',{method:'POST',body:JSON.stringify(body)});
+    s.textContent='✓ 已保存'+(r.has_api_key?'（API Key 已设置）':'（⚠️ 未设 API Key）');s.style.color=r.has_api_key?'var(--green)':'var(--amber)';
+  }catch(ex){s.textContent='✗ '+ex.message;s.style.color='var(--red)'}
+}
+async function testCfg(){
+  const s=document.getElementById('cfg-status');s.textContent='测试中…';s.style.color='var(--text3)';
+  try{const r=await api('/api/settings/llm/test',{method:'POST',body:JSON.stringify({})});
+    if(r.valid){s.textContent='✓ 有效（'+r.provider+' / '+r.model+'）';s.style.color='var(--green)'}
+    else{s.textContent='✗ 无效：'+(r.error||'');s.style.color='var(--red)'}
+  }catch(ex){s.textContent='✗ '+ex.message;s.style.color='var(--red)'}
 }
 async function loadMem(b){
   b.innerHTML='加载中...';
@@ -321,30 +427,59 @@ function setupUpload(){
   fi.addEventListener('change',e=>{if(e.target.files.length)startChat(e.target.files[0])});
 }
 async function startChat(file){
-  addMsg('ai','📁 接收: '+file.name+'\n分析中...');
+  uploadedName=file.name;
   document.getElementById('ai-upload').style.display='none';
   const fd=new FormData();fd.append('file',file);
   try{
     const d=await api('/api/chat/start',{method:'POST',body:fd});
-    convId=d.conversation_id;stage='classify';
-    addMsg('ai',d.message);renderStageBar();
+    convId=d.conversation_id;stage=d.stage||'init';lastMsgCount=0;
+    renderStageBar();pollChatProgress();
   }catch(ex){addMsg('ai','❌ '+ex.message);document.getElementById('ai-upload').style.display='block'}
+}
+function pollChatProgress(){
+  if(pollChat)clearInterval(pollChat);
+  const tick=async()=>{
+    try{
+      const d=await api('/api/chat/'+convId);
+      stage=d.stage;renderStageBar();
+      const msgs=d.messages||[];
+      for(let i=lastMsgCount;i<msgs.length;i++){if(msgs[i].role==='ai')addMsg('ai',msgs[i].content);}
+      lastMsgCount=msgs.length;
+      if(['classify','understand','plan','audit','done','failed'].includes(stage)){clearInterval(pollChat);pollChat=null;}
+    }catch(ex){}
+  };
+  tick();pollChat=setInterval(tick,1200);
 }
 function addMsg(role,content){
   const msgs=document.getElementById('ai-messages');
   const div=document.createElement('div');div.className='msg '+role;div.textContent=content;
   if(role==='ai'){
-    const text=content.toLowerCase();
-    if(stage==='classify'&&content.includes('工艺')){
+    // 对话提示: 根据 AI 消息内容显示快捷提示(点击填入输入框, 不自动提交)
+    var hints=getHints(content,stage);
+    if(hints&&hints.length){
+      var hintBox=document.createElement('div');
+      hintBox.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-top:8px';
+      hints.forEach(function(h){
+        var btn=document.createElement('button');
+        btn.textContent=h;
+        btn.style.cssText='padding:4px 12px;font-size:12px;border:1px solid var(--accent);color:var(--accent);background:var(--accent-light);border-radius:16px;cursor:pointer;transition:var(--transition)';
+        btn.onmouseover=function(){btn.style.background='var(--accent)';btn.style.color='#fff'};
+        btn.onmouseout=function(){btn.style.background='var(--accent-light)';btn.style.color='var(--accent)'};
+        btn.onclick=function(){
+          var inp=document.getElementById('ai-input');
+          inp.value=h;
+          inp.focus();
+          autoGrow(inp);
+        };
+        hintBox.appendChild(btn);
+      });
+      div.appendChild(hintBox);
+    }
+    if((stage==='plan'||stage==='audit')&&content.includes('确认')){
       const a=document.createElement('div');a.className='msg-actions';
       const ok=document.createElement('button');ok.className='act-btn green';ok.textContent='确认';ok.onclick=()=>confirmStage();
       const no=document.createElement('button');no.className='act-btn amber';no.textContent='纠正';no.onclick=()=>{const p=prompt('正确工艺:');if(p)correctStage(p)};
       a.append(ok,no);div.appendChild(a);
-    }
-    if((stage==='plan'||stage==='audit')&&content.includes('确认')){
-      const a=document.createElement('div');a.className='msg-actions';
-      const ok=document.createElement('button');ok.className='act-btn green';ok.textContent=stage==='plan'?'执行转换':'确认接受';ok.onclick=()=>confirmStage();
-      a.append(ok);div.appendChild(a);
     }
     if(content.includes('DXF')&&content.includes('下载')){
       const a=document.createElement('div');a.className='msg-actions';
@@ -354,6 +489,33 @@ function addMsg(role,content){
     }
   }
   msgs.append(div);msgs.scrollTop=msgs.scrollHeight;
+}
+// 对话提示生成: 根据 AI 消息内容和阶段, 返回快捷提示列表
+function getHints(content,stage){
+  if(stage==='classify'||content.includes('零件性质')||content.includes('工艺')||content.includes('钣金')||content.includes('机加')){
+    var h=[];
+    if(content.includes('钣金'))h.push('这是钣金件','钣金，铝5052');
+    if(content.includes('机加'))h.push('机加工没问题','机加，铝6061');
+    if(!h.length)h.push('钣金','机加工','注塑');
+    h.push('打样','量产','成本优先','精度优先');
+    return h;
+  }
+  if(content.includes('材料')||content.includes('什么材料')){
+    return ['铝5052','铝6061','冷轧板SPCC','镀锌板SECC','不锈钢304','ABS塑料'];
+  }
+  if(content.includes('公差')||content.includes('精度')){
+    return ['一般±0.1','配合±0.05','精密±0.01','配合面要高精度'];
+  }
+  if(content.includes('量级')||content.includes('批量')||content.includes('打样')){
+    return ['打样','小批','量产'];
+  }
+  if(content.includes('缺')||content.includes('补全')||content.includes('补吗')){
+    return ['补全','只补螺纹','只补Ra','先不补，看看再说'];
+  }
+  if(content.includes('确认')&&content.includes('工艺')){
+    return ['确认','换一个','我觉得是钣金焊接'];
+  }
+  return null;
 }
 async function sendMsg(){
   const inp=document.getElementById('ai-input');const txt=inp.value.trim();
@@ -385,9 +547,23 @@ function pollConvert(){
         clearInterval(poll);poll=null;
         stage='done';renderStageBar();
         addMsg('ai','✅ 转换完成！点击下载DXF。');
+        const dlName=(uploadedName||'零件').replace(/\.stp[p]?$/i,'.dxf');
+        addOutputFile(dlName,'/api/convert/download/'+convId+'?token='+TOKEN);
       }
     }catch(ex){}
   },3000);
+}
+function addOutputFile(name,url){
+  const box=document.getElementById('ai-files');
+  if(!box)return;
+  box.classList.add('show');
+  if(box.querySelector('[data-name="'+name+'"]'))return;
+  const row=document.createElement('div');row.className='ai-file-row';row.setAttribute('data-name',name);
+  row.innerHTML='<span class="af-icon">📄</span><span class="af-name"></span><a class="af-dl" target="_blank">⬇ 下载</a>';
+  row.querySelector('.af-name').textContent=name;
+  const a=row.querySelector('.af-dl');a.href=url;a.download=name;
+  if(!box.querySelector('.af-title')){const t=document.createElement('div');t.className='af-title';t.textContent='输出文件';box.prepend(t);}
+  box.append(row);
 }
 function handleKey(e){if(e.key==='Enter'&&!e.shiftY){e.preventDefault();sendMsg()}}
 function autoGrow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,70)+'px'}

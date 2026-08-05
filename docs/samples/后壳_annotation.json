@@ -1,0 +1,1553 @@
+{
+  "dimensions": [
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        309.8
+      ],
+      "p2": [
+        380.0,
+        309.8
+      ],
+      "value": 242.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "242",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        309.8
+      ],
+      "p2": [
+        138.0,
+        449.0
+      ],
+      "value": 139.2,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "left",
+      "angle": 90,
+      "text": "139",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        -0.20000000000000284
+      ],
+      "p2": [
+        380.0,
+        -0.20000000000000284
+      ],
+      "value": 242.0,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "242",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        -0.20000000000000284
+      ],
+      "p2": [
+        138.0,
+        31.7
+      ],
+      "value": 31.9,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "left",
+      "angle": 90,
+      "text": "31.9",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        689.8,
+        339.8
+      ],
+      "p2": [
+        829.0,
+        339.8
+      ],
+      "value": 139.2,
+      "layer": "DIM",
+      "view": "Left",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "139",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        689.8,
+        339.8
+      ],
+      "p2": [
+        689.8,
+        371.7
+      ],
+      "value": 31.9,
+      "layer": "DIM",
+      "view": "Left",
+      "level": 0,
+      "side": "left",
+      "angle": 90,
+      "text": "31.9",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        309.8
+      ],
+      "p2": [
+        143.0,
+        309.8
+      ],
+      "value": 5.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        143.0,
+        309.8
+      ],
+      "p2": [
+        151.0,
+        309.8
+      ],
+      "value": 8.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "8",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        151.0,
+        309.8
+      ],
+      "p2": [
+        158.0,
+        309.8
+      ],
+      "value": 7.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "7",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        158.0,
+        309.8
+      ],
+      "p2": [
+        177.5,
+        309.8
+      ],
+      "value": 19.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "19.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        177.5,
+        309.8
+      ],
+      "p2": [
+        185.0,
+        309.8
+      ],
+      "value": 7.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "7.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        185.0,
+        309.8
+      ],
+      "p2": [
+        266.5,
+        309.8
+      ],
+      "value": 81.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "81.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        266.5,
+        309.8
+      ],
+      "p2": [
+        277.5,
+        309.8
+      ],
+      "value": 11.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "11",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        277.5,
+        309.8
+      ],
+      "p2": [
+        305.5,
+        309.8
+      ],
+      "value": 28.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "28",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        305.5,
+        309.8
+      ],
+      "p2": [
+        313.5,
+        309.8
+      ],
+      "value": 8.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "8",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        313.5,
+        309.8
+      ],
+      "p2": [
+        325.0,
+        309.8
+      ],
+      "value": 11.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "11.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        325.0,
+        309.8
+      ],
+      "p2": [
+        344.5,
+        309.8
+      ],
+      "value": 19.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "19.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        344.5,
+        309.8
+      ],
+      "p2": [
+        352.5,
+        309.8
+      ],
+      "value": 8.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "8",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        352.5,
+        309.8
+      ],
+      "p2": [
+        360.5,
+        309.8
+      ],
+      "value": 8.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "8",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        360.5,
+        309.8
+      ],
+      "p2": [
+        367.5,
+        309.8
+      ],
+      "value": 7.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "7",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        367.5,
+        309.8
+      ],
+      "p2": [
+        375.0,
+        309.8
+      ],
+      "value": 7.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "7.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        375.0,
+        309.8
+      ],
+      "p2": [
+        380.0,
+        309.8
+      ],
+      "value": 5.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        309.8
+      ],
+      "p2": [
+        138.0,
+        314.8
+      ],
+      "value": 5.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        314.8
+      ],
+      "p2": [
+        138.0,
+        316.9
+      ],
+      "value": 2.1,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "2.1",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        316.9
+      ],
+      "p2": [
+        138.0,
+        327.1
+      ],
+      "value": 10.2,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "10.2",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        327.1
+      ],
+      "p2": [
+        138.0,
+        327.8
+      ],
+      "value": 0.7,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "0.7",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        327.8
+      ],
+      "p2": [
+        138.0,
+        329.9
+      ],
+      "value": 2.1,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "2.1",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        329.9
+      ],
+      "p2": [
+        138.0,
+        343.0
+      ],
+      "value": 13.1,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "13.1",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        343.0
+      ],
+      "p2": [
+        138.0,
+        393.3
+      ],
+      "value": 50.3,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "50.3",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        393.3
+      ],
+      "p2": [
+        138.0,
+        400.8
+      ],
+      "value": 7.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "7.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        400.8
+      ],
+      "p2": [
+        138.0,
+        437.0
+      ],
+      "value": 36.2,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "36.2",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        437.0
+      ],
+      "p2": [
+        138.0,
+        440.5
+      ],
+      "value": 3.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "3.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        440.5
+      ],
+      "p2": [
+        138.0,
+        441.0
+      ],
+      "value": 0.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "0.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        441.0
+      ],
+      "p2": [
+        138.0,
+        444.0
+      ],
+      "value": 3.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "3",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        138.0,
+        444.0
+      ],
+      "p2": [
+        138.0,
+        449.0
+      ],
+      "value": 5.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        375.0,
+        449.0
+      ],
+      "p2": [
+        380.0,
+        449.0
+      ],
+      "value": 5.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "top",
+      "angle": 0,
+      "text": "",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        380.0,
+        314.8
+      ],
+      "p2": [
+        380.0,
+        449.0
+      ],
+      "value": 134.2,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "right",
+      "angle": 90,
+      "text": "",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        375.0,
+        449.0
+      ],
+      "p2": [
+        380.0,
+        449.0
+      ],
+      "value": 5.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "top",
+      "angle": 0,
+      "text": "",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        380.0,
+        444.0
+      ],
+      "p2": [
+        380.0,
+        449.0
+      ],
+      "value": 5.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 1,
+      "side": "right",
+      "angle": 90,
+      "text": "",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        158.049,
+        449.0
+      ],
+      "p2": [
+        380.0,
+        449.0
+      ],
+      "value": 222.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 2,
+      "side": "top",
+      "angle": 0,
+      "text": "",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        380.0,
+        314.8
+      ],
+      "p2": [
+        380.0,
+        449.0
+      ],
+      "value": 134.2,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 2,
+      "side": "right",
+      "angle": 90,
+      "text": "",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        143.0,
+        449.0
+      ],
+      "p2": [
+        380.0,
+        449.0
+      ],
+      "value": 237.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 3,
+      "side": "top",
+      "angle": 0,
+      "text": "",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        380.0,
+        329.85
+      ],
+      "p2": [
+        380.0,
+        449.0
+      ],
+      "value": 119.2,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 3,
+      "side": "right",
+      "angle": 90,
+      "text": "",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "radius",
+      "p1": [
+        325.0,
+        440.5
+      ],
+      "p2": [
+        325.0,
+        440.5
+      ],
+      "value": 1.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "R1.5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "radius",
+      "p1": [
+        151.0,
+        327.8
+      ],
+      "p2": [
+        151.0,
+        327.8
+      ],
+      "value": 2.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "9-%%C4",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "radius",
+      "p1": [
+        143.0,
+        329.85
+      ],
+      "p2": [
+        143.0,
+        329.85
+      ],
+      "value": 2.5,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "7-%%C5",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "radius",
+      "p1": [
+        305.5,
+        437.0
+      ],
+      "p2": [
+        305.5,
+        437.0
+      ],
+      "value": 3.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "2-%%C6",
+      "leader_pts": [],
+      "feature_id": ""
+    },
+    {
+      "type": "leader",
+      "p1": [
+        380.0,
+        15.75
+      ],
+      "p2": [
+        380.0,
+        15.75
+      ],
+      "value": 31.9,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "t=31.9",
+      "leader_pts": [
+        [
+          380.0,
+          15.75
+        ],
+        [
+          395.0,
+          25.75
+        ],
+        [
+          413.0,
+          25.75
+        ]
+      ],
+      "feature_id": ""
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "3-%%C10x90%%D 通",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0016,F0020,F0033"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "%%C6x90%%D 通",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0023"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "%%C4x90%%D 通",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0022"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "%%C6.3x90%%D 通",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0027"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "2-M4-6H 深4",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0018,F0032"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        0.0,
+        0.0
+      ],
+      "p2": [
+        0.0,
+        0.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Right",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "2-%%C4 ↓1.5",
+      "leader_pts": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          26.0,
+          12.0
+        ],
+        [
+          44.0,
+          12.0
+        ]
+      ],
+      "feature_id": "F0002,F0005"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        760.0,
+        380.0
+      ],
+      "p2": [
+        760.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Left",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "%%C4 ↓1.5",
+      "leader_pts": [
+        [
+          760.0,
+          380.0
+        ],
+        [
+          786.0,
+          392.0
+        ],
+        [
+          804.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0008"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        760.0,
+        380.0
+      ],
+      "p2": [
+        760.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Left",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "%%C4 ↓2.5",
+      "leader_pts": [
+        [
+          760.0,
+          380.0
+        ],
+        [
+          786.0,
+          392.0
+        ],
+        [
+          804.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0012"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "%%C6 通",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0025"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        40.0
+      ],
+      "p2": [
+        250.0,
+        40.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "%%C4x90%%D ↓1.5",
+      "leader_pts": [
+        [
+          250.0,
+          40.0
+        ],
+        [
+          276.0,
+          52.0
+        ],
+        [
+          294.0,
+          52.0
+        ]
+      ],
+      "feature_id": "F0001"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        40.0
+      ],
+      "p2": [
+        250.0,
+        40.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "C2",
+      "leader_pts": [
+        [
+          250.0,
+          40.0
+        ],
+        [
+          276.0,
+          52.0
+        ],
+        [
+          294.0,
+          52.0
+        ]
+      ],
+      "feature_id": "F0084"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        40.0
+      ],
+      "p2": [
+        250.0,
+        40.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "2-%%C4.0",
+      "leader_pts": [
+        [
+          250.0,
+          40.0
+        ],
+        [
+          276.0,
+          52.0
+        ],
+        [
+          294.0,
+          52.0
+        ]
+      ],
+      "feature_id": "F0003,F0004"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        760.0,
+        380.0
+      ],
+      "p2": [
+        760.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Left",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "8-%%C4.0",
+      "leader_pts": [
+        [
+          760.0,
+          380.0
+        ],
+        [
+          786.0,
+          392.0
+        ],
+        [
+          804.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0006,F0007,F0009,F0010,F0011,F0013,F0014,F0015"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "4-%%C10.0x90%%D",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0017,F0019,F0021,F0034"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "3-%%C6.0x90%%D",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0024,F0029,F0030"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "2-%%C4.0x90%%D",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0026,F0031"
+    },
+    {
+      "type": "leader",
+      "p1": [
+        250.0,
+        380.0
+      ],
+      "p2": [
+        250.0,
+        380.0
+      ],
+      "value": 0.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "%%C6.0",
+      "leader_pts": [
+        [
+          250.0,
+          380.0
+        ],
+        [
+          276.0,
+          392.0
+        ],
+        [
+          294.0,
+          392.0
+        ]
+      ],
+      "feature_id": "F0028"
+    }
+  ],
+  "stats": {
+    "total": 65,
+    "linear": 43,
+    "radius": 4,
+    "leader": 18,
+    "by_type": {
+      "linear": 43,
+      "radius": 4,
+      "leader": 18
+    },
+    "target": 100,
+    "meets_target": false,
+    "meets_linear": false,
+    "meets_radius": true
+  }
+}

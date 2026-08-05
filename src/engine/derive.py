@@ -128,6 +128,13 @@ def derive_dxf_scale(source_dxf_path: str, scale_factor: float) -> str:
             entity.dxf.xscale = entity.dxf.get("xscale", 1.0) * scale_factor
             entity.dxf.yscale = entity.dxf.get("yscale", 1.0) * scale_factor
             entity.dxf.zscale = entity.dxf.get("zscale", 1.0) * scale_factor
+            # 同步缩放块定义内几何体(防嵌套引用泄漏未缩放图形)
+            blk = doc.blocks.get(entity.dxf.name)
+            if blk is not None:
+                for be in blk:
+                    if be.dxftype() == "LINE":
+                        be.dxf.start = Vec3(*[v * scale_factor for v in be.dxf.start.xyz])
+                        be.dxf.end = Vec3(*[v * scale_factor for v in be.dxf.end.xyz])
 
         elif dxftype in ("TEXT", "MTEXT"):
             ix, iy, iz = _scale_point(*entity.dxf.insert.xyz)

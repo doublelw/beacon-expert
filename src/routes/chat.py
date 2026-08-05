@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from src.auth import get_current_user
-from src.database import get_db, User, Conversation, init_db
+from src.database import get_db, User, Conversation, init_db, SessionLocal
 from src.engine.chat_workflow import (
     start_classify, confirm_classify, correct_classify,
     handle_user_message, confirm_and_advance, add_message,
@@ -38,7 +38,7 @@ async def start_conversation(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """上传STP → 创建会话 → 启动M0工艺判断."""
+    """上传STP → 创建会话 → 后台异步跑M0(前端轮询 /chat/{id} 看实时进度)."""
     content = await file.read()
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(400, "文件超限")
@@ -53,37 +53,59 @@ async def start_conversation(
     with open(stp_path, "wb") as f:
         f.write(content)
 
-    # 创建会话
     conv = Conversation(id=conv_id, user_id=user.id, stage="init")
     db.add(conv)
-    db.commit()
-    add_message(conv, "ai", f"📁 已接收文件：{file.filename}\n正在分析3D模型...", "init")
-    db.commit()
-
-    # M0: 先用freecadcmd提取特征(veritas)
-    try:
-        env = {**os.environ, "STP": stp_path, "OUT": f"{work_dir}/veritas.json"}
-        subprocess.run(
-            [FC_BIN, str(SAAS_CORE / "veritas.py")],
-            env=env, capture_output=True, timeout=120, cwd=work_dir,
-        )
-        features_json = (
-            open(f"{work_dir}/veritas.json").read()
-            if os.path.exists(f"{work_dir}/veritas.json")
-            else "{}"
-        )
-    except Exception:
-        features_json = "{}"
-
-    # 启动AI工艺判断
+    add_message(conv, "ai", f"📁 已接收文件：{file.filename}", "init")
+    add_message(conv, "ai", "🔧 正在用 FreeCAD 提取 3D 特征（冷启动需数十秒，请稍候）...", "init")
     ctx = conv.context or {}
     ctx["stp_path"] = stp_path
     ctx["work_dir"] = work_dir
     conv.context = ctx
     db.commit()
 
-    msg = await start_classify(conv, db, features_json)
-    return {"conversation_id": conv_id, "stage": "classify", "message": msg}
+    # 后台异步: veritas特征提取 → AI工艺判断. 不阻塞响应, 每步写进度消息供轮询.
+    asyncio.create_task(_run_classify_bg(conv_id, stp_path, work_dir))
+    return {"conversation_id": conv_id, "stage": "init", "status": "running"}
+
+
+async def _run_classify_bg(conv_id: str, stp_path: str, work_dir: str):
+    """后台任务: veritas(线程池) → classify(LLM). 每步 add_message 写进度, 失败也写."""
+    db = SessionLocal()
+    try:
+        conv = db.query(Conversation).filter(Conversation.id == conv_id).first()
+        if not conv:
+            return
+        out = f"{work_dir}/veritas.json"
+
+        def _veritas():
+            env = {**os.environ, "STP": stp_path, "OUT": out}
+            subprocess.run(
+                [FC_BIN, str(SAAS_CORE / "veritas.py")],
+                env=env, capture_output=True, timeout=180, cwd=work_dir,
+            )
+        try:
+            await asyncio.to_thread(_veritas)
+            features_json = open(out).read() if os.path.exists(out) else "{}"
+        except Exception as ex:
+            features_json = "{}"
+            add_message(conv, "ai", f"⚠️ 特征提取异常（改用默认特征）：{str(ex)[:120]}", "init")
+            db.commit()
+
+        add_message(conv, "ai", "🧠 特征就绪，正在 AI 工艺判断...", "classify")
+        db.commit()
+        await start_classify(conv, db, features_json)
+        db.commit()
+    except Exception as e:
+        try:
+            conv = db.query(Conversation).filter(Conversation.id == conv_id).first()
+            if conv:
+                add_message(conv, "ai", f"❌ 分析失败：{str(e)[:200]}", "failed")
+                conv.stage = "failed"
+                db.commit()
+        except Exception:
+            pass
+    finally:
+        db.close()
 
 
 @router.post("/{conv_id}/message")

@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 from sqlalchemy import (
     create_engine, Column, Integer, String, Text, Boolean, Float,
-    DateTime, ForeignKey, JSON, Enum as SAEnum, Text, event
+    DateTime, ForeignKey, JSON, Enum as SAEnum, Text, event, inspect, text
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from src.config import DB_URL, DB_PATH
@@ -32,10 +32,32 @@ def get_db():
         db.close()
 
 
+def _ensure_columns():
+    """幂等列迁移: 对已存在的旧表用 ALTER TABLE ADD COLUMN 补 project_id.
+
+    create_all 只建新表不改旧表列, 故需要这个补丁把 project_id 加到
+    drawings/conversations/conversion_tasks 上 (SQLite 兼容)。
+    """
+    insp = inspect(engine)
+    additions = [
+        ("drawings", "project_id", "INTEGER REFERENCES projects(id)"),
+        ("conversations", "project_id", "INTEGER REFERENCES projects(id)"),
+        ("conversion_tasks", "project_id", "INTEGER REFERENCES projects(id)"),
+    ]
+    with engine.begin() as conn:
+        for table, col, typedef in additions:
+            if table not in insp.get_table_names():
+                continue
+            existing = {c["name"] for c in insp.get_columns(table)}
+            if col not in existing:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {typedef}"))
+
+
 def init_db():
-    """创建所有表."""
+    """创建所有表 + 对旧表补 project_id 列."""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
+    _ensure_columns()
 
 
 # === 用户系统 ===
@@ -63,6 +85,25 @@ class Department(Base):
     users = relationship("User", back_populates="department")
 
 
+# === 项目系统 (多零件按项目组织; 每项目指定 work_dir) ===
+
+class Project(Base):
+    __tablename__ = "projects"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    scope = Column(String(20), nullable=False, default="enterprise")  # personal/dept/enterprise
+    dept_id = Column(Integer, ForeignKey("departments.id"), nullable=True)  # scope=dept 时所属部门
+    work_dir = Column(String(512), nullable=False)  # 用户指定的项目工作目录绝对路径
+    tech_reqs = Column(JSON, default=lambda: {  # 项目级技术要求 (适用于全项目零件)
+        "material": None, "tolerance": None, "volume": None,
+        "priority": None, "special": None,
+    })
+    status = Column(String(20), nullable=False, default="active")  # active/archived
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
 # === 知识库 ===
 
 class Knowledge(Base):
@@ -85,6 +126,7 @@ class ConversionTask(Base):
     __tablename__ = "conversion_tasks"
     id = Column(String(36), primary_key=True)  # UUID
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
     stp_path = Column(String(512), nullable=False)
     dxf_path = Column(String(512), nullable=True)
     status = Column(String(20), nullable=False, default="queued")
@@ -113,6 +155,7 @@ class Drawing(Base):
     __tablename__ = "drawings"
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
     name = Column(String(255), nullable=False)
     task_id = Column(String(36), ForeignKey("conversion_tasks.id"), nullable=True)
     step_path = Column(String(512), nullable=False)
@@ -162,6 +205,7 @@ class Conversation(Base):
     __tablename__ = "conversations"
     id = Column(String(36), primary_key=True)  # UUID
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
     task_id = Column(String(36), ForeignKey("conversion_tasks.id"), nullable=True)
     stage = Column(String(20), nullable=False, default="init")
     # init/classify/understand/plan/convert/audit/done/failed

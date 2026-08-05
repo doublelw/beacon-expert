@@ -1,0 +1,9 @@
+{
+  "llm": {
+    "provider": "zhipu",
+    "model": "glm-4.5-air",
+    "api_key": "6a1eade108f4475b9c1d16df4c45cadc.4NSuALrRmUcOg95R",
+    "base_url": "https://open.bigmodel.cn/api/anthropic",
+    "protocol": "anthropic"
+  }
+}

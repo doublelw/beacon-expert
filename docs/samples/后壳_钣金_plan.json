@@ -1,0 +1,462 @@
+{
+  "title_block": {
+    "name": "后壳",
+    "drawing_no": "BEACON-001",
+    "material": "AL5052",
+    "scale": "1:2",
+    "sheet": "A1",
+    "designer": "",
+    "checker": "",
+    "reviewer": "",
+    "date": "2025-07-09",
+    "company": "Beacon"
+  },
+  "views": [
+    {
+      "view": "Front",
+      "type": "standard"
+    },
+    {
+      "view": "Top",
+      "type": "standard"
+    },
+    {
+      "view": "Left",
+      "type": "standard"
+    },
+    {
+      "view": "Section-A",
+      "type": "section",
+      "plane": {
+        "axis": "Y",
+        "offset": 0.0
+      },
+      "source": "Front",
+      "label": "A-A",
+      "purpose": "垂直折弯线剖切, 显示折弯角/折弯R/减薄"
+    },
+    {
+      "view": "Flat-Pattern",
+      "type": "auxiliary",
+      "source": "Front",
+      "label": "展开图",
+      "purpose": "标注展开长度 + 孔位展开坐标"
+    },
+    {
+      "view": "Detail-B",
+      "type": "detail",
+      "source": "Top",
+      "zone": {
+        "cx": -99.0,
+        "cy": -52.2,
+        "r": 15
+      },
+      "scale": 3,
+      "label": "B(3:1)",
+      "purpose": "翻边/压铆螺纹孔局部放大"
+    }
+  ],
+  "annotations": [
+    {
+      "feature_id": "F0016",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C5/%%C10×90°",
+      "spec": {
+        "hole_dia": 5.0,
+        "head_dia": 10.0,
+        "angle": 90,
+        "head_face": "+Z"
+      }
+    },
+    {
+      "feature_id": "F0002",
+      "view": "Front",
+      "type": "diameter",
+      "value": "%%C4"
+    },
+    {
+      "feature_id": "F0018",
+      "view": "Detail-B",
+      "type": "thread",
+      "value": "M4-6H 深4",
+      "spec": {
+        "thread_spec": "M4",
+        "tolerance": "6H",
+        "depth": 4.0
+      }
+    },
+    {
+      "feature_id": "F0035",
+      "view": "Section-A",
+      "type": "bend",
+      "value": "折弯 90° R5.0 ↑",
+      "spec": {
+        "angle": 90,
+        "radius": 5.0,
+        "direction": "up",
+        "k_factor": 0.3
+      }
+    },
+    {
+      "feature_id": "F0038",
+      "view": "Section-A",
+      "type": "bend",
+      "value": "折弯 45° R5.0 ↑",
+      "spec": {
+        "angle": 45,
+        "radius": 5.0,
+        "direction": "up",
+        "k_factor": 0.3
+      }
+    },
+    {
+      "feature_id": "F0091",
+      "view": "Front",
+      "type": "thickness",
+      "value": "t2.5",
+      "spec": {
+        "sheet_thickness": 2.5
+      }
+    },
+    {
+      "feature_id": "F0091",
+      "view": "Section-A",
+      "type": "weld",
+      "value": "角焊缝 3♭",
+      "spec": {
+        "weld_type": "fillet",
+        "size": 3,
+        "symbol": "♭",
+        "standard": "GB/T 324"
+      }
+    },
+    {
+      "feature_id": "F0091",
+      "view": "Flat-Pattern",
+      "type": "overall_dim",
+      "value": "展开长度(含K因子补偿)",
+      "spec": {
+        "k_factor": 0.3,
+        "note": "展开尺寸含折弯补偿, K=0.3"
+      }
+    },
+    {
+      "feature_id": "F0091",
+      "view": "Flat-Pattern",
+      "type": "hole_position",
+      "value": "孔位从基准A/B标注展开坐标",
+      "spec": {
+        "datum_ref": "A, B"
+      }
+    },
+    {
+      "feature_id": "F0091",
+      "view": "Front",
+      "type": "chamfer",
+      "value": "C0.5(除注明外)",
+      "spec": {
+        "style": "45°倒角统注"
+      }
+    },
+    {
+      "feature_id": "F0001",
+      "view": "Front",
+      "type": "csink",
+      "value": "%%C4.0x90%%D",
+      "spec": {
+        "big_d": 4.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0003",
+      "view": "Front",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0004",
+      "view": "Front",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0005",
+      "view": "Front",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0006",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0007",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0008",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0009",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0010",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0011",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0012",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0013",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0014",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0015",
+      "view": "Left",
+      "type": "diameter",
+      "value": "%%C4.0"
+    },
+    {
+      "feature_id": "F0017",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C10.0x90%%D",
+      "spec": {
+        "big_d": 10.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0019",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C10.0x90%%D",
+      "spec": {
+        "big_d": 10.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0020",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C10.0x90%%D",
+      "spec": {
+        "big_d": 10.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0021",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C10.0x90%%D",
+      "spec": {
+        "big_d": 10.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0022",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C4.0x90%%D",
+      "spec": {
+        "big_d": 4.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0023",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C6.0x90%%D",
+      "spec": {
+        "big_d": 6.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0024",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C6.0x90%%D",
+      "spec": {
+        "big_d": 6.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0025",
+      "view": "Top",
+      "type": "diameter",
+      "value": "%%C6.0"
+    },
+    {
+      "feature_id": "F0026",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C4.0x90%%D",
+      "spec": {
+        "big_d": 4.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0027",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C6.3x90%%D",
+      "spec": {
+        "big_d": 6.3,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0028",
+      "view": "Top",
+      "type": "diameter",
+      "value": "%%C6.0"
+    },
+    {
+      "feature_id": "F0029",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C6.0x90%%D",
+      "spec": {
+        "big_d": 6.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0030",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C6.0x90%%D",
+      "spec": {
+        "big_d": 6.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0031",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C4.0x90%%D",
+      "spec": {
+        "big_d": 4.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0032",
+      "view": "Top",
+      "type": "thread",
+      "value": "M4.0-6H",
+      "spec": {
+        "d": 4.0,
+        "pitch": 0.8,
+        "class": "6H"
+      }
+    },
+    {
+      "feature_id": "F0033",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C10.0x90%%D",
+      "spec": {
+        "big_d": 10.0,
+        "angle": 90
+      }
+    },
+    {
+      "feature_id": "F0034",
+      "view": "Top",
+      "type": "csink",
+      "value": "%%C10.0x90%%D",
+      "spec": {
+        "big_d": 10.0,
+        "angle": 90
+      }
+    }
+  ],
+  "roughness": [
+    {
+      "face": "折弯变形面",
+      "ra": "Ra3.2",
+      "placement": "Section-A折弯区"
+    },
+    {
+      "face": "焊接面",
+      "ra": "Ra6.3",
+      "placement": "Section-A焊缝处"
+    },
+    {
+      "face": "外形面",
+      "ra": "Ra6.3",
+      "placement": "Front外形轮廓"
+    }
+  ],
+  "gdt": [
+    {
+      "char": "⊥",
+      "name": "垂直度",
+      "value": 0.1,
+      "face": "折弯立面(相对于底面)",
+      "datum": "A"
+    },
+    {
+      "char": "∥",
+      "name": "平行度",
+      "value": 0.15,
+      "face": "底面",
+      "datum": "A"
+    }
+  ],
+  "tech_req": [
+    "材料: AL5052, 板厚 t2.5",
+    "未注尺寸公差按 GB/T 1804-m",
+    "未注角度公差按 GB/T 1804-m",
+    "折弯未注尺寸按 GB/T 1804-m",
+    "焊缝按 GB/T 324",
+    "去毛刺、锐边倒钝",
+    "表面钝化处理"
+  ],
+  "plan_meta": {
+    "part_name": "后壳",
+    "process": "sheet_metal",
+    "confidence": 0.88,
+    "process_confirmed_by_user": true
+  }
+}
