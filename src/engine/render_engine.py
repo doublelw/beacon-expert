@@ -699,9 +699,19 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
             continue
         vl = layout.views[vn]
 
+        _seen_line = set()  # 精确重复LINE去重 (HLR双发射/对称件重影防护, x2重复零信息损失)
         for ln in view_data.get('lines', []):
             p1 = vl.to_abs(ln['p1'][0], ln['p1'][1])
             p2 = vl.to_abs(ln['p2'][0], ln['p2'][1])
+            if math.hypot(p2[0] - p1[0], p2[1] - p1[1]) < 1e-6:
+                counts['line_skip'] = counts.get('line_skip', 0) + 1  # 零长度退化边
+                continue
+            _k = tuple(sorted([(round(p1[0], 6), round(p1[1], 6)),
+                               (round(p2[0], 6), round(p2[1], 6))]))
+            if _k in _seen_line:
+                counts['line_dedup'] = counts.get('line_dedup', 0) + 1
+                continue
+            _seen_line.add(_k)
             msp.add_line(p1, p2, dxfattribs={'layer': 'OUTLINE'})
             counts['line'] += 1
 
@@ -1000,6 +1010,7 @@ def _build_tech_requirements(plan: Optional[dict], geometry: Optional[dict]) -> 
     # 默认 GB 模板
     material = 'SPCC 冷轧钢板'
     roughness = 'Ra 3.2'
+    D = 25  # geometry缺失时的默认板厚
     if geometry:
         # 板类零件默认粗糙度
         D = geometry.get('depth', 25)
