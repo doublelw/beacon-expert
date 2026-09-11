@@ -116,6 +116,22 @@ async def run_pipeline(stp_path: str, work_dir: str = None) -> dict:
                 "work_dir": work_dir,
             }
 
+        # === Stage 3.5: unfold (python+build123d, 可选非致命) ===
+        # 钣金中面展开 → 展开视图数据; 无build123d/非钣金件自动跳过
+        flat_out = f"{work_dir}/flat.json"
+        if not os.path.exists(flat_out):
+            ur = await _run_python(
+                str(SAAS_CORE.parent / "src/engine/unfold.py"),
+                [stp_path, flat_out], cwd=work_dir, timeout=180,
+            )
+            ok_unfold = ur["returncode"] == 0 and os.path.exists(flat_out)
+            results["unfold"] = {
+                "returncode": ur["returncode"],
+                "stderr": _truncate(ur["stderr"]),
+            } if not ok_unfold else {"status": "ok"}
+        else:
+            results["unfold"] = {"status": "cached"}
+
         # === Stage 4: render (python, 直接函数调用) ===
         dxf_path = f"{work_dir}/output.dxf"
         try:
@@ -126,7 +142,14 @@ async def run_pipeline(stp_path: str, work_dir: str = None) -> dict:
             plan_data = json.load(open(ai_plan_out)) if os.path.exists(ai_plan_out) else None
             geom_path = f"{work_dir}/clean_geom.json"
             geom = json.load(open(geom_path)) if os.path.exists(geom_path) else None
-            report = render(proj, plan_data, None, geom, dxf_path)
+            # 展开数据 (可选): build123d缺失/失败不阻塞主管线
+            flat_data = None
+            if os.path.exists(flat_out):
+                try:
+                    flat_data = json.load(open(flat_out))
+                except Exception:  # noqa: BLE001
+                    flat_data = None
+            report = render(proj, plan_data, None, geom, dxf_path, flat=flat_data)
             results["render"] = {"status": "ok", "report": report}
         except Exception as ex:  # noqa: BLE001
             results["render"] = {"status": "error", "error": _truncate(str(ex))}

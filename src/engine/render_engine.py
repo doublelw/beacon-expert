@@ -120,6 +120,7 @@ LAYERS = [
     ('TECH',      5, 'CONTINUOUS',   LW_FRAME),   # 技术要求
     ('BOM',       7, 'CONTINUOUS',   LW_FRAME),   # 明细栏
     ('SECTION',   1, 'CONTINUOUS',   LW_THIN),    # 剖面线 (预留)
+    ('BEND',      5, 'DASHED',       LW_THIN),    # 展开图折弯线 虚线 蓝
 ]
 
 # 图幅 (GB/T 14689, mm) — 宽×高
@@ -1395,8 +1396,9 @@ def render(projection: dict,
            plan: Optional[dict] = None,
            annotation: Optional[dict] = None,
            geometry: Optional[dict] = None,
-           output_dxf: str = 'output.dxf') -> dict:
-    """统一渲染主入口 (M4 布局 + M3 几何 + M5 标注 + M6 加工 + 图框).
+           output_dxf: str = 'output.dxf',
+           flat: Optional[dict] = None) -> dict:
+    """统一渲染主入口 (M4 布局 + M3 几何 + M5 标注 + M6 加工 + 图框 + 展开视图).
 
     Args:
         projection: projection.json (M3 六视图几何, 必需)
@@ -1404,6 +1406,7 @@ def render(projection: dict,
         annotation: annotation.json (M5 标注, plan 缺失时降级用)
         geometry:   geometry.json (bbox/holes, 备用)
         output_dxf: 输出 DXF 路径
+        flat:       unfold.py 产物 (展开视图, 可选)
 
     Returns:
         渲染报告 (counts / SMART 校验 / 标注来源 / 技术要求条数)
@@ -1455,6 +1458,9 @@ def render(projection: dict,
     # === 紧固件明细栏 (AI识别结果直接体现, 对标样例 Y1:9-S-M3-1+明细栏) ===
     fastener_count = render_fastener_bom(msp, layout)
 
+    # === 展开视图 (钣金, 参考, 画在已有内容下方空白区) ===
+    flat_report = render_flat_view(msp, flat, layout)
+
     # === 保存 ===
     os.makedirs(os.path.dirname(os.path.abspath(output_dxf)), exist_ok=True)
     doc.saveas(output_dxf)
@@ -1472,6 +1478,7 @@ def render(projection: dict,
         'annotation_stats': ann_stats,
         'tech_req_count': len(tech_list),
         'tech_req': tech_list,
+        'flat_view': flat_report,
         'smart_check': {
             'align_error_x_mm': layout.align_error_x,
             'align_x_pass': layout.align_error_x < 1.0,   # 长对正误差 <1mm
@@ -1493,6 +1500,98 @@ def render(projection: dict,
 
 
 # ─────────────────────────────────────────────────────────────
+# 展开视图 (unfold.py 产物, 参考)
+# ─────────────────────────────────────────────────────────────
+
+def render_flat_view(msp, flat: Optional[dict], layout: 'LayoutResult') -> dict:
+    """展开视图 (参考): 轮廓/孔/折弯线 → 图纸下方空白区.
+
+    布局: 已有内容之下、标题栏左侧; 比例优先与主图一致, 放不下则缩.
+    注: 画的是段真实表面, 相邻段边缘存在±t/2级偏移 (中面参考图可接受).
+    """
+    if not flat:
+        return {'status': 'skipped'}
+    lines = flat.get('lines', [])
+    arcs = flat.get('arcs', [])
+    circles = flat.get('circles', [])
+    bends = flat.get('bend_lines', [])
+    if not (lines or arcs or circles):
+        return {'status': 'empty'}
+
+    xs, ys = [], []
+    for ln in lines:
+        xs += [ln['p1'][0], ln['p2'][0]]
+        ys += [ln['p1'][1], ln['p2'][1]]
+    for a in arcs:
+        xs += [a['cx'] - a['r'], a['cx'] + a['r']]
+        ys += [a['cy'] - a['r'], a['cy'] + a['r']]
+    for c in circles:
+        xs += [c['cx'] - c['r'], c['cx'] + c['r']]
+        ys += [c['cy'] - c['r'], c['cy'] + c['r']]
+    if not xs:
+        return {'status': 'empty'}
+    w = max(xs) - min(xs)
+    h = max(ys) - min(ys)
+
+    # 已有几何范围 (排除文字/图框/尺寸层, 技术要求文字块在左下角) → 下方空带
+    import ezdxf.bbox as _bb
+    _skip = {'TECH', 'TEXT', 'TITLE', 'BOM', 'FRAME', 'DIM'}
+    geom_ents = [e for e in msp
+                 if e.dxf.get('layer', '0') not in _skip]
+    try:
+        ext = _bb.extents(geom_ents, fast=True)
+    except Exception:  # noqa: BLE001
+        return {'status': 'bbox_error'}
+    sw, sh = layout.sheet_size
+    x_left = 25.0
+    x_right = sw - 200.0          # 避开标题栏 (右下 180×56+边距)
+    if ext.has_data:
+        y_top = ext.extmin.y - 15.0
+    else:
+        y_top = sh - 40.0
+    y_bot = 70.0                  # 技术要求文字块 (y≈10..60) 之上
+    avail_w = max(x_right - x_left, 10.0)
+    avail_h = max(y_top - y_bot, 10.0)
+    scale = min(layout.scale, avail_w / max(w, 1e-6), avail_h / max(h, 1e-6))
+    if scale < 0.04:
+        return {'status': 'no_room'}
+    # 平移到空带左下
+    ox = x_left - min(xs) * scale
+    oy = y_bot - min(ys) * scale
+
+    def _pt(p):
+        return (ox + p[0] * scale, oy + p[1] * scale)
+
+    n = 0
+    for ln in lines:
+        msp.add_line(_pt(ln['p1']), _pt(ln['p2']), dxfattribs={'layer': 'OUTLINE'})
+        n += 1
+    for a in arcs:
+        msp.add_arc((ox + a['cx'] * scale, oy + a['cy'] * scale),
+                    a['r'] * scale,
+                    math.degrees(a.get('start_angle', 0)),
+                    math.degrees(a.get('end_angle', 6.28318)),
+                    dxfattribs={'layer': 'OUTLINE'})
+        n += 1
+    for c in circles:
+        msp.add_circle((ox + c['cx'] * scale, oy + c['cy'] * scale),
+                       c['r'] * scale, dxfattribs={'layer': 'HOLE'})
+        n += 1
+    for bl in bends:
+        msp.add_line(_pt(bl['p1']), _pt(bl['p2']),
+                     dxfattribs={'layer': 'BEND'})
+        n += 1
+    # 标注: 视图名 + 比例 + 折弯线说明
+    msp.add_text(f'展开图 (参考  比例1:{1 / scale:g}  虚线=折弯线)',
+                 dxfattribs={'height': FONT_HEIGHT_TEXT,
+                             'insert': (x_left, y_bot + h * scale + 6),
+                             'layer': 'TEXT', 'style': FONT_CJK})
+    return {'status': 'ok', 'entities': n, 'scale': scale,
+            'segments': flat.get('segments_unfolded'),
+            'thickness': flat.get('thickness')}
+
+
+# ─────────────────────────────────────────────────────────────
 # IO
 # ─────────────────────────────────────────────────────────────
 
@@ -1511,6 +1610,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument('--plan', default=None, help='drawing_plan.json (M2, 可选)')
     p.add_argument('--annotation', default=None, help='annotation.json (M5 降级)')
     p.add_argument('--geometry', default=None, help='geometry.json (备用)')
+    p.add_argument('--flat', default=None, help='flat.json (展开视图, unfold.py产物)')
     p.add_argument('-o', '--output', default='output/fixed_board_gb.dxf',
                    help='输出 DXF')
     args = p.parse_args(argv)
@@ -1519,13 +1619,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     plan = _load(args.plan)
     ann = _load(args.annotation)
     geom = _load(args.geometry)
+    flat = _load(args.flat)
 
     if proj is None:
         print(f'[render_engine] ERROR: projection not found: {args.projection}',
               file=sys.stderr)
         return 1
 
-    report = render(proj, plan, ann, geom, args.output)
+    report = render(proj, plan, ann, geom, args.output, flat=flat)
 
     # 输出报告
     print(f"[render_engine] {report['output']}")
