@@ -145,6 +145,22 @@ async def run_pipeline(stp_path: str, work_dir: str = None) -> dict:
         except Exception as ex:  # noqa: BLE001
             results["verify"] = {"error": _truncate(str(ex))}
 
+        # === Stage 5b: dxf_checks (in-process, 确定性完整性校验, 非致命) ===
+        # vendored from text-to-cad cadgen.drawing_checks (MIT): 重复实体/零长度/
+        # 开放轮廓/单位声明 — verify.py 比对 3D↔2D 语义, 此处补文档级完整性
+        if os.path.exists(dxf_path):
+            try:
+                from src.engine.dxf_checks import validate_dxf_file
+                findings = validate_dxf_file(dxf_path)
+                results["dxf_checks"] = {
+                    "errors": sum(1 for f in findings if f.severity == "error"),
+                    "warnings": sum(1 for f in findings if f.severity == "warning"),
+                    "info": sum(1 for f in findings if f.severity == "info"),
+                    "detail": [f.render() for f in findings if f.severity == "error"][:20],
+                }
+            except Exception as ex:  # noqa: BLE001
+                results["dxf_checks"] = {"error": _truncate(str(ex))}
+
         # === Stage 6: eval (python, sys.argv: dxf veritas plan — 无 json 输出) ===
         try:
             er = await _run_python(
