@@ -101,6 +101,26 @@ async def run_pipeline(stp_path: str, work_dir: str = None) -> dict:
         results["ai_plan"] = r2
         # ai_plan 失败不致命, render 可降级
 
+        # === Stage 2.6: annotate (python, P2标注引擎, 失败不致命) ===
+        # veritas → geometry适配 → annotation.json (外形+链式孔距+孔径, 对标客户108级)
+        ann_out = f"{work_dir}/annotation.json"
+        if not os.path.exists(ann_out):
+            try:
+                from src.engine.annotator import annotate as _annotate
+                from src.engine.veritas_geom import veritas_to_geometry
+                _geom = veritas_to_geometry(json.load(open(veritas_out)))
+                if _geom is None:
+                    results["annotate"] = {"status": "skipped", "reason": "no holes/bbox"}
+                else:
+                    _ann = _annotate(_geom, None, target_count=100)
+                    with open(ann_out, "w", encoding="utf-8") as _f:
+                        json.dump(_ann, _f, ensure_ascii=False, indent=2)
+                    results["annotate"] = {"status": "ok", "stats": _ann["stats"]}
+            except Exception as ex:  # noqa: BLE001
+                results["annotate"] = {"status": "error", "error": _truncate(str(ex))}
+        else:
+            results["annotate"] = {"status": "cached"}
+
         # === Stage 3: projection (freecadcmd) ===
         proj_out = f"{work_dir}/proj_v3.json"
         r3 = await run_freecad(
@@ -199,6 +219,16 @@ async def run_pipeline(stp_path: str, work_dir: str = None) -> dict:
             }
         except Exception as ex:  # noqa: BLE001
             results["eval"] = {"error": _truncate(str(ex))}
+
+        # === Stage 7: acceptance (图纸验收门, 客户样例普查基准) ===
+        # dxf_checks 查完整性, 本门查可用性 (DIMENSION/TEXT/LEADER 密度) —
+        # 4个尺寸的废图必须在这里被拦下 (2026-09-13 教训)
+        if dxf_exists:
+            try:
+                from src.engine.acceptance import accept
+                results["acceptance"] = accept(dxf_path)
+            except Exception as ex:  # noqa: BLE001
+                results["acceptance"] = {"pass": False, "error": _truncate(str(ex))}
 
         dxf_exists = os.path.exists(dxf_path)
         return {

@@ -129,6 +129,10 @@ SHEET_SIZES = {
     'A3': (420, 297),  'A4': (297, 210),
 }
 
+# 渲染视图集 (GB/T 17452: 基本视图按需选用; 客户样例无 Back —
+# 后视图为 Front 镜像, 信息量低且独占大量采样样条, 默认不出)
+RENDER_VIEWS = {'Top', 'Front', 'Bottom', 'Left', 'Right'}
+
 # 布局间距系数 (SMART)
 SPACING_H_FACTOR = 0.3   # 上下间距 = 板高 H × 0.3
 SPACING_W_FACTOR = 0.3   # 左右间距 = 板宽 W × 0.3
@@ -653,11 +657,58 @@ def setup_layers(doc: 'ezdxf.document.Drawing') -> None:
 # M3 几何渲染 (六视图)
 # ─────────────────────────────────────────────────────────────
 
+def _fit_circle(pts: List, r_tol: float = 0.05):
+    """Kasa 代数圆拟合: 残差≤r_tol 返回 (cx,cy,r,a0,a1) 否则 None.
+
+    用于把 HLR 采样样条还原为真实圆弧 (圆角/冲压腰形/圆孔弧段).
+    """
+    n = len(pts)
+    sx = sum(p[0] for p in pts); sy = sum(p[1] for p in pts)
+    sxx = sum(p[0] * p[0] for p in pts); syy = sum(p[1] * p[1] for p in pts)
+    sxy = sum(p[0] * p[1] for p in pts)
+    sxz = sum(p[0] * (p[0] * p[0] + p[1] * p[1]) for p in pts)
+    syz = sum(p[1] * (p[0] * p[0] + p[1] * p[1]) for p in pts)
+    sz = sum(p[0] * p[0] + p[1] * p[1] for p in pts)
+    # 解 [sxx sxy sx; sxy syy sy; sx sy n]·[A B C] = [sxz syz sz]
+    det = (sxx * syy * n + sxy * sy * sx + sx * syy * sx
+           - sx * syy * sx - sxy * sxy * n - sxx * sy * sy)
+    if abs(det) < 1e-9:
+        return None
+    A = (sxz * syy * n + syz * sy * sx + sz * sxy * sy
+         - sz * syy * sy - syz * sxy * sx - sxz * sy * sy) / det
+    B = (sxx * syz * n + sxy * sz * sx + sx * sy * syz
+         - sx * syy * sz - sxy * sxy * syz - sxx * sy * sz) / det
+    C = (sxx * syy * sz + sxy * syz * sx + sx * sxy * syz
+         - sx * syy * sxz - sxy * sxy * sz - sxx * sy * syz) / det
+    cx, cy = A / 2, B / 2
+    rr2 = C + cx * cx + cy * cy
+    if rr2 <= 0:
+        return None
+    r = math.sqrt(rr2)
+    # 残差校验
+    max_dev = max(abs(math.hypot(p[0] - cx, p[1] - cy) - r) for p in pts)
+    if max_dev > r_tol:
+        return None
+    angs = [math.atan2(p[1] - cy, p[0] - cx) for p in pts]
+    # 展开到连续区间取 min/max
+    angs.sort()
+    a0, a1 = angs[0], angs[-1]
+    # 检测跨越 ±π 的弧 (相邻角差 > π 视为跨 wraps)
+    gaps = [(angs[(i + 1) % n] - angs[i]) % (2 * math.pi) for i in range(n)]
+    gi = gaps.index(max(gaps))
+    if max(gaps) > math.pi:  # 弧跨越 ±π: 从最大缺口之后开始
+        a0 = angs[(gi + 1) % n]
+        a1 = angs[gi]
+        if a1 < a0:
+            a1 += 2 * math.pi
+    return (cx, cy, r, a0, a1)
+
+
 def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Optional[dict] = None) -> Dict[str, int]:
     """渲染六视图几何到 modelspace.
 
     每条几何 (line/arc/spline/circle) 按 ViewLayout.origin 平移到图纸坐标.
-    轮廓/孔 → OUTLINE/HOLE 层 (粗实线).
+    轮廓/孔 → OUTLINE/HOLE 层 (粗实线). 采样样条经 _fit_circle 还原为 ARC.
     """
     counts = {'line': 0, 'arc': 0, 'spline': 0, 'circle': 0}
     views = projection.get('views', {})
@@ -753,6 +804,19 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
                     msp.add_line(abs_pts[0], abs_pts[1],
                                  dxfattribs={'layer': 'OUTLINE'})
                     counts['line'] += 1
+                elif len(abs_pts) >= 4:
+                    # 圆弧拟合 (Kasa): 采样样条残差小→真ARC (客户样例36条净样条
+                    # vs 我们238条采样膨胀的教训; ARC也是机加更优的实体类型)
+                    _arc = _fit_circle(abs_pts)
+                    if _arc is not None:
+                        cx, cy, r, a0, a1 = _arc
+                        msp.add_arc((cx, cy), r,
+                                    math.degrees(a0), math.degrees(a1),
+                                    dxfattribs={'layer': 'OUTLINE'})
+                        counts['arc_from_spline'] = counts.get('arc_from_spline', 0) + 1
+                    else:
+                        msp.add_spline(abs_pts, dxfattribs={'layer': 'OUTLINE'})
+                        counts['spline'] += 1
                 else:
                     msp.add_spline(abs_pts, dxfattribs={'layer': 'OUTLINE'})
                     counts['spline'] += 1
@@ -949,6 +1013,7 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                 dim = msp.add_linear_dim(
                     base=base, p1=p1, p2=p2, angle=angle,
                     dimstyle='GB_DIM',
+                    text=text if text else '<>',
                     dxfattribs={'layer': 'DIM'})
                 dim.render()
                 stats['linear'] += 1
@@ -959,10 +1024,11 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                     r_val = d['r']
                 center = p1
                 r_scaled = r_val * vl.scale
-                # 同上: dimstyle 必须作为独立参数
+                # 同上: dimstyle 必须作为独立参数; text 覆盖支持 "n-%%Cd" 计数前缀
                 dim = msp.add_radius_dim(
                     center=center, radius=r_scaled, angle=45,
                     dimstyle='GB_DIM',
+                    text=text if text else '<>',
                     dxfattribs={'layer': 'DIM'})
                 dim.render()
                 stats['radius'] += 1
@@ -1136,6 +1202,44 @@ def render_frame(msp, layout: LayoutResult, plan: Optional[dict],
     _add_text(name, tb_x0 + 12, bom_y0 + 6, FONT_HEIGHT_SMALL, 'BOM')
     _add_text(number, tb_x0 + tb_w * 0.5, bom_y0 + 6, FONT_HEIGHT_SMALL, 'BOM')
     _add_text('1', tb_x0 + tb_w - 12, bom_y0 + 6, FONT_HEIGHT_SMALL, 'BOM')
+
+    # === 图框分区网格 (GB/T 14689.1: 内外框之间, 上/右对齐字母+数字) ===
+    # 与客户样例一致: 横向数字 1..N, 纵向字母 A..H (自下而上)
+    zone_labels = []
+    nzx = max(4, int(sw // 100))            # 每 ~100mm 一区
+    nzy = max(3, int(sh // 100))
+    for i in range(nzx + 1):                # 分区分隔线 (上下边)
+        x = ml + (sw - ml - mr) * i / nzx
+        if 0 < i < nzx:
+            msp.add_line((x, mb), (x, mb + 5), dxfattribs={'layer': 'FRAME'})
+            msp.add_line((x, sh - mt - 5), (x, sh - mt), dxfattribs={'layer': 'FRAME'})
+        if i < nzx:
+            zone_labels.append(('TEXT', str(i + 1),
+                                (x + (sw - ml - mr) / nzx / 2 - 2, mb + 1.2),
+                                (x + (sw - ml - mr) / nzx / 2 - 2, sh - mt - 4.2)))
+    import string as _string
+    for j in range(nzy + 1):
+        y = mb + (sh - mb - mt) * j / nzy
+        if 0 < j < nzy:
+            msp.add_line((ml, y), (ml + 5, y), dxfattribs={'layer': 'FRAME'})
+            msp.add_line((sw - mr - 5, y), (sw - mr, y), dxfattribs={'layer': 'FRAME'})
+        if j < nzy:
+            letter = _string.ascii_uppercase[j]
+            zone_labels.append(('TEXT', letter,
+                                (ml + 1.2, y + (sh - mb - mt) / nzy / 2 - 2),
+                                (sw - mr - 4.2, y + (sh - mb - mt) / nzy / 2 - 2)))
+    for _, txt, p_bot, p_top in zone_labels:
+        _add_text(txt, p_bot[0], p_bot[1], 3.5, 'FRAME')
+
+    # === 标题栏补充字段 (签名/日期/版本变更 — 客户样例标题栏字段) ===
+    _add_text('签名', tb_x0 + 5, tb_y0 + tb_h - 26, 3.0)
+    _add_text('日期', tb_x0 + 5, tb_y0 + tb_h - 38, 3.0)
+    _add_text('设计', x1 + 5, tb_y0 + tb_h * 0.52, 3.0)
+    _add_text('审核', x2 + 5, tb_y0 + tb_h * 0.52, 3.0)
+    _add_text('版本变更说明', x1 + 5, tb_y0 + tb_h * 0.30, 3.0)
+    _add_text(f'品名: {name}', x2 + 5, tb_y0 + tb_h * 0.30, 3.0)
+    _add_text('标记', x1 + 5, tb_y0 + 14, 3.0)
+    _add_text('数量: 1PCS/套', x2 + 5, tb_y0 + 14, 3.0)
 
 
 def render_fastener_bom(msp, layout, plan_path='output/ai_plan.json'):
@@ -1411,8 +1515,11 @@ def render(projection: dict,
     Returns:
         渲染报告 (counts / SMART 校验 / 标注来源 / 技术要求条数)
     """
-    # === M4 布局 ===
-    layout = layout_six_views(projection, plan)
+    # === M4 布局 (视图集按 RENDER_VIEWS 过滤, 对齐客户样例) ===
+    proj_filtered = dict(projection)
+    proj_filtered['views'] = {k: v for k, v in projection.get('views', {}).items()
+                              if k in RENDER_VIEWS} or projection.get('views', {})
+    layout = layout_six_views(proj_filtered, plan)
 
     # === ezdxf 文档 ===
     doc = ezdxf.new('R2013', setup=True)
