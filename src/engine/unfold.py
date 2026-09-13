@@ -189,6 +189,9 @@ def build_bend_graph(shape, segs, thickness):
                 continue
             p0 = (float(p0[0]), float(p0[1]), float(p0[2]))
             # 见证圆柱: 轴∥交线 且 圆柱心距交线 < R+2t (真折弯, 带BA)
+            # 面积下限: 退化碎面(≈0, 冲压垃圾)不参与 (固定板46个零面积面的教训)
+            if a.area < 5 or b.area < 5:
+                continue
             wit = None
             for (d, r, loc) in cyls:
                 if abs(d[0] * u[0] + d[1] * u[1] + d[2] * u[2]) < 0.95:
@@ -209,6 +212,11 @@ def build_bend_graph(shape, segs, thickness):
                 bends.append(Bend(loc, (u[0], u[1], u[2]), r, a, b))
             else:
                 # 无圆柱: 45°倒角/直角过渡 (顶点贴合交线即连接, BA=0)
+                # 面积门槛(不对称): 大法兰带小卷边=真结构(后壳S10),
+                # 小-小相连=冲压噪声 (固定板127噪声折弯线的教训)
+                lo, hi = sorted((a.area, b.area))
+                if lo < 5 or hi < 40:
+                    continue
                 thr2 = 1.5 * thickness + 1.5
                 if _seg_line_dist(a, p0, u) > thr2 or _seg_line_dist(b, p0, u) > thr2:
                     continue
@@ -339,6 +347,8 @@ def unfold(shape, thickness: Optional[float] = None, k_factor: float = 0.33):
            'segments_total': len(segs), 'lines': [], 'arcs': [],
            'circles': [], 'splines': [], 'bend_lines': []}
     from build123d import GeomType as GT, Edge
+    # 共享边去重: 相邻段共享边被两面各画一次 (E2E dxf_checks duplicate_entity教训)
+    raw = {'lines': [], 'arcs': [], 'circles': [], 'splines': []}
     for s in segs:
         if s.sid not in T:
             continue
@@ -346,7 +356,28 @@ def unfold(shape, thickness: Optional[float] = None, k_factor: float = 0.33):
             moved = T[s.sid] * f
             local = base_plane.to_local_coords(moved)
             for e in local.edges():
-                _emit_edge(e, out)
+                _emit_edge(e, raw)
+    # 按几何签名去重 (线: 端点对; 弧: 圆心+半径+角度)
+    out['lines'] = []
+    seen_lines = set()
+    for ln in raw['lines']:
+        k = tuple(sorted([(round(ln['p1'][0], 4), round(ln['p1'][1], 4)),
+                          (round(ln['p2'][0], 4), round(ln['p2'][1], 4))]))
+        if k not in seen_lines:
+            seen_lines.add(k)
+            out['lines'].append(ln)
+    out['arcs'] = []
+    seen_arcs = set()
+    for a in raw['arcs']:
+        k = (round(a['cx'], 3), round(a['cy'], 3), round(a['r'], 3),
+             round(a.get('start_angle', 0) % 6.28318, 3),
+             round(a.get('end_angle', 0) % 6.28318, 3))
+        if k not in seen_arcs:
+            seen_arcs.add(k)
+            out['arcs'].append(a)
+    out['circles'] = raw['circles']
+    out['splines'] = raw['splines']
+    seen_bends = set()
     # 折弯线: 已展开bend的轴投影到基面2D, 按两段顶点投影区间裁剪
     for bd in bends:
         if bd.sa.sid in T and bd.sb.sid in T:
@@ -372,9 +403,13 @@ def unfold(shape, thickness: Optional[float] = None, k_factor: float = 0.33):
             if not ts:
                 continue
             t0, t1 = max(min(ts), -L), min(max(ts), L)
-            out['bend_lines'].append({
-                'p1': [q1.X + ux * t0, q1.Y + uy * t0],
-                'p2': [q1.X + ux * t1, q1.Y + uy * t1]})
+            cand = {'p1': [q1.X + ux * t0, q1.Y + uy * t0],
+                    'p2': [q1.X + ux * t1, q1.Y + uy * t1]}
+            kb = tuple(sorted([(round(cand['p1'][0], 3), round(cand['p1'][1], 3)),
+                               (round(cand['p2'][0], 3), round(cand['p2'][1], 3))]))
+            if kb not in seen_bends:
+                seen_bends.add(kb)
+                out['bend_lines'].append(cand)
     return out
 
 
@@ -439,14 +474,20 @@ def _guess_thickness(shape):
     return dists[0][0]
 
 
-def unfold_step(stp_path: str, solid_index: int = 0, k_factor: float = 0.33):
-    """STP文件入口: 取第solid_index个solid展开 (跳过压铆标准件)."""
+def unfold_step(stp_path: str, solid_index: Optional[int] = None, k_factor: float = 0.33):
+    """STP文件入口: 展开指定solid.
+
+    solid_index=None (默认) 取最大体积solid (零件本体, 跳过压铆标准件等小件);
+    显式传index则按文件顺序取.
+    """
     shape = import_step(stp_path)
     solids = shape.solids()
     if not solids:
         raise RuntimeError(f'{stp_path} 无 solid')
-    shell = solids[solid_index] if solid_index < len(solids) else max(
-        solids, key=lambda s: s.volume)
+    if solid_index is None:
+        shell = max(solids, key=lambda s: s.volume)
+    else:
+        shell = solids[min(solid_index, len(solids) - 1)]
     return unfold(shell, k_factor=k_factor)
 
 
