@@ -293,11 +293,12 @@ def annotate(geometry: dict, projection: dict | None = None,
     for i in range(len(chain_x) - 1):
         lo, hi = chain_x[i], chain_x[i + 1]
         seg = round(hi - lo, 1)
-        if seg < TOL:
+        if seg < 1.2:  # 极微段: 文字物理放不下
             continue
+        # <6mm小段不共层(端点共享文字必叠), ≥6mm链式相邻共层(规范允许)
         _lin('Top', 0, 'bottom',
              (top_ox + lo, top_oy + by0), (top_ox + hi, top_oy + by0), seg, f'{seg:g}',
-             allow_touch=True)
+             allow_touch=(hi - lo) >= 6.0)
 
     # Y 方向: 板下边 by0 -> 各独特孔 y -> 板上边 by1, 放板左侧
     unique_y = sorted({round(h['y'], 1) for h in holes})
@@ -306,24 +307,30 @@ def annotate(geometry: dict, projection: dict | None = None,
     for i in range(len(chain_y) - 1):
         lo, hi = chain_y[i], chain_y[i + 1]
         seg = round(hi - lo, 1)
-        if seg < TOL:
+        if seg < 1.2:
             continue
         _lin('Top', 90, 'left',
              (top_ox + bx0, top_oy + lo), (top_ox + bx0, top_oy + hi), seg, f'{seg:g}',
-             allow_touch=True)
+             allow_touch=(hi - lo) >= 6.0)
 
     # === 3. 基准孔定位强化 (GB: 关键角部孔相对板边的绝对距离, 单独放对边) ===
     # 链式标注的"基准段"(板边 -> 第一个孔)已含第一个孔定位; 这里只对最关键的
     # 角部定位孔补一条到对边的绝对距离, 放在板的 top/right 侧(与链式 bottom/left
     # 侧物理分离), 用独立层池避免与链式竞争同向 span。
+    # 对称孔坐标相同→重复定位尺寸(145.1×2教训): 按(分量,值)去重
+    seen_loc = set()
     key_holes = _pick_key_holes(holes, bx0, bx1, by0, by1, top_n=4)
     for h in key_holes:
-        _lin('Top', 0, 'top',
-             (top_ox + h['x'], top_oy + by1), (top_ox + bx1, top_oy + by1),
-             round(bx1 - h['x'], 1))
-        _lin('Top', 90, 'right',
-             (top_ox + bx1, top_oy + h['y']), (top_ox + bx1, top_oy + by1),
-             round(by1 - h['y'], 1))
+        vx = round(bx1 - h['x'], 1)
+        vy = round(by1 - h['y'], 1)
+        if ('x', vx) not in seen_loc:
+            seen_loc.add(('x', vx))
+            _lin('Top', 0, 'top',
+                 (top_ox + h['x'], top_oy + by1), (top_ox + bx1, top_oy + by1), vx)
+        if ('y', vy) not in seen_loc:
+            seen_loc.add(('y', vy))
+            _lin('Top', 90, 'right',
+                 (top_ox + bx1, top_oy + h['y']), (top_ox + bx1, top_oy + by1), vy)
 
     # === 4. 孔径标注 (GB: 同径只标一次, radius_dim; 多孔组/大孔用 leader) ====
     dia_groups: dict[float, list[dict]] = {}

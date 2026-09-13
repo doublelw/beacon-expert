@@ -992,8 +992,9 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
             angle = d.get('angle', 0)
 
             if t == 'linear':
-                # 标注层偏移 (图纸单位, 已含比例)
-                offset = (25 + level * 18) * vl.scale
+                # 标注层偏移 = 图纸绝对mm (不乘视图比例 — 尺寸偏移是纸张注记,
+                # 比例0.5会把18mm层距压成9mm导致文字叠死, 09-14教训)
+                offset = 20 + level * 13
                 if angle == 0:
                     if side == 'bottom':
                         base = (p1[0], p1[1] - offset)
@@ -1531,8 +1532,13 @@ def render(projection: dict,
     # === M3 几何 ===
     geom_counts = render_projection(msp, projection, layout, geometry)
 
-    # === M5 外形尺寸标注 (对标样例线性标注) ===
-    dim_count = render_outline_dims(msp, projection, layout)
+    # === M5 外形尺寸标注 ===
+    # annotation 清单已含外形6尺寸(annotator), 再画 outline_dims 会双写
+    # (145.1×2 教训) — 仅在无标注来源时用 outline_dims 兜底
+    if annotation:
+        dim_count = 0
+    else:
+        dim_count = render_outline_dims(msp, projection, layout)
 
     # === 公差表 (GB/T 1804, 对标样例) ===
     render_tolerance_table(msp, layout)

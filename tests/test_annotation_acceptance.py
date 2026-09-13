@@ -47,11 +47,14 @@ def test_veritas_adapter_empty():
 
 
 def test_annotate_density():
-    """孔板标注密度: 20孔5×4栅格 → 外形6+X链6+Y链5+角部8+孔径1-3 ≈ 26+."""
-    r = annotate(veritas_to_geometry(_veritas()), None, target_count=25)
+    """孔板标注密度: 20孔5×4栅格 → 外形6+X链+Y链+角部去重+孔径 ≈ 23+.
+
+    09-14起: 定位尺寸按(分量,值)去重(145.1×2教训), 极微段<1.2mm剔除.
+    """
+    r = annotate(veritas_to_geometry(_veritas()), None, target_count=20)
     s = r['stats']
-    assert s['total'] >= 25
-    assert s['linear'] >= 15
+    assert s['total'] >= 20
+    assert s['linear'] >= 12
     # 同径只标一次: 20孔同径 → 1条 radius 或 leader (len≥3走leader分支)
     assert s['radius'] + s['leader'] >= 1
     assert s['radius'] + s['leader'] <= 3
