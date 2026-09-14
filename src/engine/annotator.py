@@ -293,8 +293,7 @@ def annotate(geometry: dict, projection: dict | None = None,
     for i in range(len(chain_x) - 1):
         lo, hi = chain_x[i], chain_x[i + 1]
         seg = round(hi - lo, 1)
-        if seg < 1.2:  # 极微段: 文字物理放不下
-            continue
+        # 宪法D1: 全部链段必标(样例最小线性1.2mm, 微段过滤致孔坐标不可达=违宪)
         # <6mm小段不共层(端点共享文字必叠), ≥6mm链式相邻共层(规范允许)
         _lin('Top', 0, 'bottom',
              (top_ox + lo, top_oy + by0), (top_ox + hi, top_oy + by0), seg, f'{seg:g}',
@@ -307,8 +306,6 @@ def annotate(geometry: dict, projection: dict | None = None,
     for i in range(len(chain_y) - 1):
         lo, hi = chain_y[i], chain_y[i + 1]
         seg = round(hi - lo, 1)
-        if seg < 1.2:
-            continue
         _lin('Top', 90, 'left',
              (top_ox + bx0, top_oy + lo), (top_ox + bx0, top_oy + hi), seg, f'{seg:g}',
              allow_touch=(hi - lo) >= 6.0)

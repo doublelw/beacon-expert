@@ -73,6 +73,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import sys
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
@@ -96,6 +97,9 @@ FONT_HEIGHT_TEXT = 5.0         # 一般文字
 FONT_HEIGHT_TITLE = 7.0        # 标题
 FONT_HEIGHT_TECH = 5.0         # 技术要求
 FONT_HEIGHT_SMALL = 2.5        # 角注
+
+# 默认材料 (标题栏/技术要求/明细栏同源, 宪法F2; plan.title_block.material 优先)
+DEFAULT_MATERIAL = 'Q235'
 
 # 线宽 (GB/T 17450, mm)
 LW_THICK = 0.50                # 粗实线 (轮廓)
@@ -657,6 +661,16 @@ def setup_layers(doc: 'ezdxf.document.Drawing') -> None:
 # M3 几何渲染 (六视图)
 # ─────────────────────────────────────────────────────────────
 
+def _near_line(pts: List, tol: float = 0.05) -> bool:
+    """内点全部落在首尾弦的 tol 带内 → 近直线 (R>1000伪拟合弧改判直线)."""
+    (x1, y1), (x2, y2) = pts[0], pts[-1]
+    L = math.hypot(x2 - x1, y2 - y1)
+    if L < 1e-9:
+        return False
+    return all(abs((x2 - x1) * (y1 - y) - (x1 - x) * (y2 - y1)) / L <= tol
+               for (x, y) in pts)
+
+
 def _fit_circle(pts: List, r_tol: float = 0.05):
     """Kasa 代数圆拟合: 残差≤r_tol 返回 (cx,cy,r,a0,a1) 否则 None.
 
@@ -685,6 +699,9 @@ def _fit_circle(pts: List, r_tol: float = 0.05):
     if rr2 <= 0:
         return None
     r = math.sqrt(rr2)
+    # 天文半径 = 近直线样条的伪拟合 (R=2.9e23教训): 按直线处理, 不出ARC
+    if r > 1000:
+        return None
     # 残差校验
     max_dev = max(abs(math.hypot(p[0] - cx, p[1] - cy) - r) for p in pts)
     if max_dev > r_tol:
@@ -814,6 +831,11 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
                                     math.degrees(a0), math.degrees(a1),
                                     dxfattribs={'layer': 'OUTLINE'})
                         counts['arc_from_spline'] = counts.get('arc_from_spline', 0) + 1
+                    elif _near_line(abs_pts):
+                        # 近直线样条 → LINE (R=2.9e23伪拟合弧的根治)
+                        msp.add_line(abs_pts[0], abs_pts[-1],
+                                     dxfattribs={'layer': 'OUTLINE'})
+                        counts['line'] += 1
                     else:
                         msp.add_spline(abs_pts, dxfattribs={'layer': 'OUTLINE'})
                         counts['spline'] += 1
@@ -939,28 +961,56 @@ def _resolve_dims(plan: Optional[dict], annotation: Optional[dict]) -> Tuple[Lis
                 return dims, 'drawing_plan'
         # plan 没有具体坐标 → 降级到 annotation
     if annotation and 'dimensions' in annotation:
-        # annotator 坐标反推: 减去 DEFAULT_ORIGINS 得零件坐标
-        # DEFAULT_ORIGINS 同 annotator.py: Top(250,380) Front(250,40) Left(760,380)
-        ANN_ORIGINS = {'Top': (250.0, 380.0), 'Front': (250.0, 40.0),
-                       'Left': (760.0, 380.0)}
-        dims = []
-        for d in annotation['dimensions']:
-            vn = d.get('view', 'Top')
-            ox, oy = ANN_ORIGINS.get(vn, (0.0, 0.0))
-            nd = dict(d)
-            p1 = d.get('p1', [0, 0])
-            p2 = d.get('p2', [0, 0])
-            nd['p1'] = [p1[0] - ox, p1[1] - oy]
-            nd['p2'] = [p2[0] - ox, p2[1] - oy]
-            if d.get('leader_pts'):
-                nd['leader_pts'] = [[pp[0] - ox, pp[1] - oy] for pp in d['leader_pts']]
-            dims.append(nd)
+        # annotator (2026-09-14移植版) 直接输出零件局部坐标 — DEFAULT_ORIGINS 已归零,
+        # 此处不再减原点 (减老原点(250,380)会把全部标注错位到视图外, A2穿越112处的根因)
+        dims = [dict(d) for d in annotation['dimensions']]
         return dims, 'annotation_fallback'
     return [], 'none'
 
 
+def _text_box(mid, text, h=3.5):
+    """文本近似 bbox (宽=字符数×0.62h, 下限 h)."""
+    t = re.sub(r'[<>{}\\C;%%-]', '', text or '0') or '0'
+    w = max(len(t) * h * 0.62, h)
+    return (mid[0] - w / 2, mid[1] - h / 2, mid[0] + w / 2, mid[1] + h / 2)
+
+
+def _boxes_overlap(a, b, gap=0.0):
+    return not (a[2] + gap <= b[0] or a[0] - gap >= b[2] or
+                a[3] + gap <= b[1] or a[1] - gap >= b[3])
+
+
+def _seg_hits_boxes(seg, boxes, pad=2.0):
+    """线段是否与任一 bbox(外扩pad)相交 (轴对齐快速判 + 精确线段判)."""
+    x1, y1, x2, y2 = seg
+    for (bx0, by0, bx1, by1) in boxes:
+        if (max(x1, x2) < bx0 - pad or min(x1, x2) > bx1 + pad or
+                max(y1, y2) < by0 - pad or min(y1, y2) > by1 + pad):
+            continue
+        # 线段与四边精确判
+        edges = [(bx0, by0, bx1, by0), (bx1, by0, bx1, by1),
+                 (bx1, by1, bx0, by1), (bx0, by1, bx0, by0)]
+        inside = (bx0 <= x1 <= bx1 and by0 <= y1 <= by1)
+        if inside or any(_seg_intersects_seg2(seg, e) for e in edges):
+            return True
+    return False
+
+
+def _seg_intersects_seg2(a, b):
+    def _o(p, q, r):
+        v = (q[0]-p[0])*(r[1]-p[1]) - (q[1]-p[1])*(r[0]-p[0])
+        return 0 if abs(v) < 1e-9 else (1 if v > 0 else -1)
+    d1 = _o((a[0],a[1]), (a[2],a[3]), (b[0],b[1]))
+    d2 = _o((a[0],a[1]), (a[2],a[3]), (b[2],b[3]))
+    d3 = _o((b[0],b[1]), (b[2],b[3]), (a[0],a[1]))
+    d4 = _o((b[0],b[1]), (b[2],b[3]), (a[2],a[3]))
+    return d1 != d2 and d3 != d4
+
+
 def render_annotation(msp, dims: List[dict], layout: LayoutResult,
-                      source: str = 'annotation_fallback') -> Dict[str, int]:
+                      source: str = 'annotation_fallback',
+                      view_bboxes: Optional[dict] = None,
+                      view_segs: Optional[List] = None) -> Dict[str, int]:
     """渲染标注 (GB/T 4458.4).
 
     linear:  外形 / 孔距 (DIMLINEAR)
@@ -972,47 +1022,115 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
     """
     stats = {'linear': 0, 'radius': 0, 'leader': 0, 'failed': 0}
 
+    other_boxes = [b for vn, b in (view_bboxes or {}).items()]
+
+    # === Phase 1: 放置计算 (图纸坐标系消重叠 + 避其它视图, 宪法A1/A2) ===
+    placements = []  # dict(d=d, p1,p2,text,angle,side,extra,cleared)
     for d in dims:
+        t = d.get('type', 'linear')
+        vn = d.get('view', 'Top')
+        if vn not in layout.views or t != 'linear':
+            placements.append(None)
+            continue
+        vl = layout.views[vn]
+        p1 = vl.to_abs(d['p1'][0], d['p1'][1])
+        p2 = vl.to_abs(d['p2'][0], d['p2'][1])
+        placements.append({'d': d, 'p1': p1, 'p2': p2, 'vl': vl,
+                           'side': d.get('side', 'bottom'),
+                           'angle': float(d.get('angle', 0) or 0),
+                           'level': d.get('level', 0), 'extra': 0.0,
+                           'flip': False, 'text': d.get('text', '')})
+
+    def _base(pl):
+        offset = 20 + pl['level'] * 13 + pl['extra']
+        p1 = pl['p1']
+        sgn = -1.0 if pl['side'] in ('bottom', 'left') else 1.0
+        sgn = -sgn if pl['flip'] else sgn
+        if pl['angle'] == 0:
+            return (p1[0], p1[1] + sgn * offset), (0.0, sgn)
+        return (p1[0] + sgn * offset, p1[1]), (sgn, 0.0)
+
+    def _dim_seg(pl):
+        base, _ = _base(pl)
+        ux, uy = (1, 0) if pl['angle'] == 0 else (0, 1)
+        v1 = (pl['p1'][0] - base[0], pl['p1'][1] - base[1])
+        t1 = v1[0] * ux + v1[1] * uy
+        v2 = (pl['p2'][0] - base[0], pl['p2'][1] - base[1])
+        t2 = v2[0] * ux + v2[1] * uy
+        return (base[0] + t1 * ux, base[1] + t1 * uy,
+                base[0] + t2 * ux, base[1] + t2 * uy)
+
+    def _text_mid(pl):
+        base, _ = _base(pl)
+        seg = _dim_seg(pl)
+        mid = ((seg[0] + seg[2]) / 2, (seg[1] + seg[3]) / 2)
+        _, n = _base(pl)
+        return (mid[0] + n[0] * 1.75, mid[1] + n[1] * 1.75)
+
+    # A1+A2 联合收敛循环: 每轮先修尺寸线穿几何(A2), 再修文本重叠(A1);
+    # 单调加层, 确定性终止 (A1推层可能再造成A2, 故必须联合迭代)
+    for _round in range(400):
+        # --- A2: 穿几何/它视图 → 换边或加层 (一轮只修一处, 重评全部) ---
+        fixed = False
+        for pl in placements:
+            if pl is None:
+                continue
+            seg = _dim_seg(pl)
+            hit_seg = any(_seg_intersects_seg2(seg, gs) for gs in (view_segs or []))
+            hit_box = bool(other_boxes) and _seg_hits_boxes(seg, other_boxes)
+            if hit_seg or hit_box:
+                if not pl['flip']:
+                    pl['flip'] = True
+                else:
+                    pl['extra'] += 13.0
+                fixed = True
+                break
+        if fixed:
+            continue
+        # --- A1: 首个重叠对 → 推后者加层 ---
+        boxes = []
+        for i, pl in enumerate(placements):
+            if pl is None:
+                boxes.append(None)
+                continue
+            txt = pl['text'] or f"{abs(pl['p2'][0]-pl['p1'][0])+abs(pl['p2'][1]-pl['p1'][1]):.0f}"
+            boxes.append(_text_box(_text_mid(pl), txt))
+        bumped = False
+        for i in range(len(boxes)):
+            for j in range(i + 1, len(boxes)):
+                if boxes[i] and boxes[j] and _boxes_overlap(boxes[i], boxes[j], gap=1.0):
+                    placements[j]['extra'] += 13.0
+                    bumped = True
+                    break
+            if bumped:
+                break
+        if bumped:
+            continue
+        break  # A1+A2 全清 → 收敛
+
+    # === Phase 2: 按解算位置 emit ===
+    for i, d in enumerate(dims):
         t = d.get('type', 'linear')
         vn = d.get('view', 'Top')
         if vn not in layout.views:
             stats['failed'] += 1
             continue
         vl = layout.views[vn]
-
         try:
             p1_local = d.get('p1', [0, 0])
             p2_local = d.get('p2', [0, 0])
-            # 局部零件坐标 → 图纸坐标 (via to_abs, 含 scale + origin)
             p1 = vl.to_abs(p1_local[0], p1_local[1])
             p2 = vl.to_abs(p2_local[0], p2_local[1])
             text = d.get('text', '')
-            level = d.get('level', 0)
-            side = d.get('side', 'bottom')
-            angle = d.get('angle', 0)
 
             if t == 'linear':
-                # 标注层偏移 = 图纸绝对mm (不乘视图比例 — 尺寸偏移是纸张注记,
-                # 比例0.5会把18mm层距压成9mm导致文字叠死, 09-14教训)
-                offset = 20 + level * 13
-                if angle == 0:
-                    if side == 'bottom':
-                        base = (p1[0], p1[1] - offset)
-                    else:
-                        base = (p1[0], p1[1] + offset)
-                else:
-                    if side == 'left':
-                        base = (p1[0] - offset, p1[1])
-                    else:
-                        base = (p1[0] + offset, p1[1])
-
+                pl = placements[i]
+                base, _ = _base(pl)
                 # 重要: dimstyle 必须作为独立参数传 (非 dxfattribs).
                 # ezdxf add_linear_dim 解析 dimstyle 参数, dxfattribs 里的 dimstyle
                 # 不被识别, 导致 dimlfac 等 DIMSTYLE 设置失效 (文字放大 100 倍).
-                # 客户反馈 "DIMENSION 不显示" 的根因之一: 文字值=14990 而非 150,
-                # CAD 用户看不到正常尺寸.
                 dim = msp.add_linear_dim(
-                    base=base, p1=p1, p2=p2, angle=angle,
+                    base=base, p1=p1, p2=p2, angle=pl['angle'],
                     dimstyle='GB_DIM',
                     text=text if text else '<>',
                     dxfattribs={'layer': 'DIM'})
@@ -1025,7 +1143,6 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                     r_val = d['r']
                 center = p1
                 r_scaled = r_val * vl.scale
-                # 同上: dimstyle 必须作为独立参数; text 覆盖支持 "n-%%Cd" 计数前缀
                 dim = msp.add_radius_dim(
                     center=center, radius=r_scaled, angle=45,
                     dimstyle='GB_DIM',
@@ -1075,8 +1192,8 @@ def _build_tech_requirements(plan: Optional[dict], geometry: Optional[dict]) -> 
         # plan 已规划, 优先用
         return list(plan['tech_req'])
 
-    # 默认 GB 模板
-    material = 'SPCC 冷轧钢板'
+    # 默认 GB 模板 — 材料必须与标题栏同源 (宪法F2: SPCC/Q235分裂=FAIL)
+    material = DEFAULT_MATERIAL
     roughness = 'Ra 3.2'
     D = 25  # geometry缺失时的默认板厚
     if geometry:
@@ -1559,7 +1676,72 @@ def render(projection: dict,
     dims, dim_source = _resolve_dims(plan, annotation)
     # 若 plan 提供标注, 需把 plan 的坐标(可能是零件坐标)映射到视图;
     # annotator 已用视图局部坐标 (p1=origin+offset), 这里一致处理.
-    ann_stats = render_annotation(msp, dims, layout, source=dim_source)
+    # 各视图图纸 bbox + 线段清单 (A2避让用): 投影局部几何 → to_abs
+    view_bboxes = {}
+    view_segs = []
+    for _vn, _vd in proj_filtered.get('views', {}).items():
+        if _vn not in layout.views:
+            continue
+        _vl = layout.views[_vn]
+        _xs, _ys = [], []
+        for _ln in _vd.get('lines', []):
+            _q1 = _vl.to_abs(_ln['p1'][0], _ln['p1'][1])
+            _q2 = _vl.to_abs(_ln['p2'][0], _ln['p2'][1])
+            view_segs.append((_q1[0], _q1[1], _q2[0], _q2[1]))
+            _xs += [_ln['p1'][0], _ln['p2'][0]]
+            _ys += [_ln['p1'][1], _ln['p2'][1]]
+        for _a in _vd.get('arcs', []):
+            _xs += [_a['cx'] - _a['r'], _a['cx'] + _a['r']]
+            _ys += [_a['cy'] - _a['r'], _a['cy'] + _a['r']]
+            _a0 = math.radians(math.degrees(_a.get('start_angle', 0)))
+            _a1 = math.radians(math.degrees(_a.get('end_angle', 6.28318)))
+            if _a1 <= _a0:
+                _a1 += 2 * math.pi
+            _n = max(3, int((_a1 - _a0) / math.radians(20)))
+            _px = [_a['cx'] + _a['r'] * math.cos(_a0 + (_a1 - _a0) * _i / _n) for _i in range(_n + 1)]
+            _py = [_a['cy'] + _a['r'] * math.sin(_a0 + (_a1 - _a0) * _i / _n) for _i in range(_n + 1)]
+            for _i in range(_n):
+                _s1 = _vl.to_abs(_px[_i], _py[_i])
+                _s2 = _vl.to_abs(_px[_i + 1], _py[_i + 1])
+                view_segs.append((_s1[0], _s1[1], _s2[0], _s2[1]))
+        for _c in _vd.get('circles', []):
+            _xs += [_c['cx'] - _c['r'], _c['cx'] + _c['r']]
+            _ys += [_c['cy'] - _c['r'], _c['cy'] + _c['r']]
+        for _sp in _vd.get('splines', []):
+            for _p in _sp.get('points', _sp.get('ctrl_points', [])):
+                _xs.append(_p[0])
+                _ys.append(_p[1])
+        if _xs:
+            _c0 = _vl.to_abs(min(_xs), min(_ys))
+            _c1 = _vl.to_abs(max(_xs), max(_ys))
+            view_bboxes[_vn] = (min(_c0[0], _c1[0]), min(_c0[1], _c1[1]),
+                                max(_c0[0], _c1[0]), max(_c0[1], _c1[1]))
+    for _vn, _vd in proj_filtered.get('views', {}).items():
+        if _vn not in layout.views:
+            continue
+        _vl = layout.views[_vn]
+        _xs, _ys = [], []
+        for _ln in _vd.get('lines', []):
+            _xs += [_ln['p1'][0], _ln['p2'][0]]
+            _ys += [_ln['p1'][1], _ln['p2'][1]]
+        for _a in _vd.get('arcs', []):
+            _xs += [_a['cx'] - _a['r'], _a['cx'] + _a['r']]
+            _ys += [_a['cy'] - _a['r'], _a['cy'] + _a['r']]
+        for _c in _vd.get('circles', []):
+            _xs += [_c['cx'] - _c['r'], _c['cx'] + _c['r']]
+            _ys += [_c['cy'] - _c['r'], _c['cy'] + _c['r']]
+        for _sp in _vd.get('splines', []):
+            for _p in _sp.get('points', _sp.get('ctrl_points', [])):
+                _xs.append(_p[0])
+                _ys.append(_p[1])
+        if _xs:
+            _c0 = _vl.to_abs(min(_xs), min(_ys))
+            _c1 = _vl.to_abs(max(_xs), max(_ys))
+            view_bboxes[_vn] = (min(_c0[0], _c1[0]), min(_c0[1], _c1[1]),
+                                max(_c0[0], _c1[0]), max(_c0[1], _c1[1]))
+
+    ann_stats = render_annotation(msp, dims, layout, source=dim_source,
+                                  view_bboxes=view_bboxes, view_segs=view_segs)
 
     # === M6 加工说明 ===
     tech_list = _build_tech_requirements(plan, geometry)
