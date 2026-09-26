@@ -116,8 +116,8 @@ LAYERS = [
     ('HOLE',      7, 'CONTINUOUS',   LW_THICK),   # 孔轮廓 (粗实线, 与板轮廓同级)
     ('CENTER',    1, 'CENTER',       LW_CENTER),  # 中心线 点划线 红
     ('HIDDEN',    4, 'HIDDEN',       LW_HIDDEN),  # 隐藏边 虚线 (预留)
-    ('DIM',       2, 'CONTINUOUS',   LW_THIN),    # 尺寸线 / 延伸线 细实线
-    ('LEADER',    2, 'CONTINUOUS',   LW_THIN),    # 引出线 细实线
+    ('DIM',       1, 'CONTINUOUS',   LW_THIN),    # 尺寸线 红 (样例颜色语义)
+    ('LEADER',    1, 'CONTINUOUS',   LW_THIN),    # 引出线 红
     ('FRAME',     7, 'CONTINUOUS',   LW_FRAME),   # 图框
     ('TITLE',     7, 'CONTINUOUS',   LW_FRAME),   # 标题栏
     ('TEXT',      7, 'CONTINUOUS',   LW_FRAME),   # 一般文字
@@ -1010,7 +1010,9 @@ def _seg_intersects_seg2(a, b):
 def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                       source: str = 'annotation_fallback',
                       view_bboxes: Optional[dict] = None,
-                      view_segs: Optional[List] = None) -> Dict[str, int]:
+                      view_segs: Optional[List] = None,
+                      dim_extras: Optional[dict] = None,
+                      collect_handles: Optional[dict] = None) -> Dict[str, int]:
     """渲染标注 (GB/T 4458.4).
 
     linear:  外形 / 孔距 (DIMLINEAR)
@@ -1022,27 +1024,44 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
     """
     stats = {'linear': 0, 'radius': 0, 'leader': 0, 'failed': 0}
 
+    # extras 键归一化为int (handles表是str键, int/str混用=修正永不生效的教训)
+    extras_map = {int(k): float(v) for k, v in (dim_extras or {}).items()}
+
     other_boxes = [b for vn, b in (view_bboxes or {}).items()]
 
     # === Phase 1: 放置计算 (图纸坐标系消重叠 + 避其它视图, 宪法A1/A2) ===
-    placements = []  # dict(d=d, p1,p2,text,angle,side,extra,cleared)
+    placements = []  # linear: dict(p1,p2,angle,side,level,extra,flip) | radius: dict(kind='radius',...)
     for d in dims:
         t = d.get('type', 'linear')
         vn = d.get('view', 'Top')
-        if vn not in layout.views or t != 'linear':
+        if vn not in layout.views:
             placements.append(None)
             continue
         vl = layout.views[vn]
-        p1 = vl.to_abs(d['p1'][0], d['p1'][1])
-        p2 = vl.to_abs(d['p2'][0], d['p2'][1])
-        placements.append({'d': d, 'p1': p1, 'p2': p2, 'vl': vl,
-                           'side': d.get('side', 'bottom'),
-                           'angle': float(d.get('angle', 0) or 0),
-                           'level': d.get('level', 0), 'extra': 0.0,
-                           'flip': False, 'text': d.get('text', '')})
+        if t == 'linear':
+            p1 = vl.to_abs(d['p1'][0], d['p1'][1])
+            p2 = vl.to_abs(d['p2'][0], d['p2'][1])
+            placements.append({'kind': 'linear', 'd': d, 'p1': p1, 'p2': p2, 'vl': vl,
+                               'side': d.get('side', 'bottom'),
+                               'angle': float(d.get('angle', 0) or 0),
+                               'level': d.get('level', 0),
+                               'extra': extras_map.get(len(placements), 0.0),
+                               'flip': False, 'text': d.get('text', '')})
+        elif t == 'radius':
+            c = vl.to_abs(d['p1'][0], d['p1'][1])
+            r_val = d.get('value', 0) or d.get('r', 0)
+            placements.append({'kind': 'radius', 'd': d, 'c': c,
+                               'r': r_val * vl.scale, 'vl': vl,
+                               'level': d.get('level', 0),
+                               'extra': extras_map.get(len(placements), 0.0),
+                               'text': d.get('text', '')})
+        else:
+            placements.append(None)
 
     def _base(pl):
-        offset = 20 + pl['level'] * 13 + pl['extra']
+        # 紧凑lane (样例风格): 首层12mm, 层距9mm — 通长13mm层距+全板通长链
+        # 曾把标注带拉到几百mm(09-14视觉审查)
+        offset = 12 + pl['level'] * 9 + pl['extra']
         p1 = pl['p1']
         sgn = -1.0 if pl['side'] in ('bottom', 'left') else 1.0
         sgn = -sgn if pl['flip'] else sgn
@@ -1050,7 +1069,16 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
             return (p1[0], p1[1] + sgn * offset), (0.0, sgn)
         return (p1[0] + sgn * offset, p1[1]), (sgn, 0.0)
 
+    _D45 = (0.70710678, 0.70710678)
+
+    def _rad_mid(pl):
+        """radius 文本中心: 圆心沿45°外推 (r+8+extra)."""
+        dist = pl['r'] + 8 + pl['extra']
+        return (pl['c'][0] + _D45[0] * dist, pl['c'][1] + _D45[1] * dist)
+
     def _dim_seg(pl):
+        if pl['kind'] == 'radius':
+            return None  # radius 引线指向圆心, 不参与A2穿图自检
         base, _ = _base(pl)
         ux, uy = (1, 0) if pl['angle'] == 0 else (0, 1)
         v1 = (pl['p1'][0] - base[0], pl['p1'][1] - base[1])
@@ -1061,6 +1089,8 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                 base[0] + t2 * ux, base[1] + t2 * uy)
 
     def _text_mid(pl):
+        if pl['kind'] == 'radius':
+            return _rad_mid(pl)
         base, _ = _base(pl)
         seg = _dim_seg(pl)
         mid = ((seg[0] + seg[2]) / 2, (seg[1] + seg[3]) / 2)
@@ -1069,42 +1099,47 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
 
     # A1+A2 联合收敛循环: 每轮先修尺寸线穿几何(A2), 再修文本重叠(A1);
     # 单调加层, 确定性终止 (A1推层可能再造成A2, 故必须联合迭代)
-    for _round in range(400):
+    for _round in range(1500):
         # --- A2: 穿几何/它视图 → 换边或加层 (一轮只修一处, 重评全部) ---
         fixed = False
         for pl in placements:
             if pl is None:
                 continue
             seg = _dim_seg(pl)
+            if seg is None:
+                continue
             hit_seg = any(_seg_intersects_seg2(seg, gs) for gs in (view_segs or []))
             hit_box = bool(other_boxes) and _seg_hits_boxes(seg, other_boxes)
             if hit_seg or hit_box:
                 if not pl['flip']:
                     pl['flip'] = True
                 else:
-                    pl['extra'] += 13.0
+                    pl['extra'] += 9.0
                 fixed = True
                 break
         if fixed:
             continue
-        # --- A1: 首个重叠对 → 推后者加层 ---
+        # --- A1: 本轮修全部重叠对 (推后者加层, 并行收敛) ---
         boxes = []
         for i, pl in enumerate(placements):
             if pl is None:
                 boxes.append(None)
                 continue
-            txt = pl['text'] or f"{abs(pl['p2'][0]-pl['p1'][0])+abs(pl['p2'][1]-pl['p1'][1]):.0f}"
+            txt = pl.get('text')
+            if not txt:
+                if pl['kind'] == 'radius':
+                    txt = f"{pl['r'] * 2:.0f}"
+                else:
+                    txt = f"{abs(pl['p2'][0]-pl['p1'][0])+abs(pl['p2'][1]-pl['p1'][1]):.0f}"
             boxes.append(_text_box(_text_mid(pl), txt))
-        bumped = False
+        bump = set()
         for i in range(len(boxes)):
             for j in range(i + 1, len(boxes)):
                 if boxes[i] and boxes[j] and _boxes_overlap(boxes[i], boxes[j], gap=1.0):
-                    placements[j]['extra'] += 13.0
-                    bumped = True
-                    break
-            if bumped:
-                break
-        if bumped:
+                    bump.add(j)
+        if bump:
+            for j in sorted(bump):
+                placements[j]['extra'] += 9.0
             continue
         break  # A1+A2 全清 → 收敛
 
@@ -1135,6 +1170,8 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                     text=text if text else '<>',
                     dxfattribs={'layer': 'DIM'})
                 dim.render()
+                if collect_handles is not None:
+                    collect_handles[str(i)] = dim.dimension.dxf.handle
                 stats['linear'] += 1
 
             elif t == 'radius':
@@ -1143,12 +1180,20 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                     r_val = d['r']
                 center = p1
                 r_scaled = r_val * vl.scale
+                # 外推 location (A1消解结果): 沿45°把尺寸线/文字推出冲突区
+                pl = placements[i] if i < len(placements) else None
+                _extra = pl['extra'] if pl else 0.0
+                _dist = r_scaled + 6 + _extra
+                _loc = (center[0] + 0.70710678 * _dist,
+                        center[1] + 0.70710678 * _dist)
                 dim = msp.add_radius_dim(
-                    center=center, radius=r_scaled, angle=45,
+                    center=center, radius=r_scaled, location=_loc,
                     dimstyle='GB_DIM',
                     text=text if text else '<>',
                     dxfattribs={'layer': 'DIM'})
                 dim.render()
+                if collect_handles is not None:
+                    collect_handles[str(i)] = dim.dimension.dxf.handle
                 stats['radius'] += 1
 
             elif t == 'leader':
@@ -1619,7 +1664,8 @@ def render(projection: dict,
            annotation: Optional[dict] = None,
            geometry: Optional[dict] = None,
            output_dxf: str = 'output.dxf',
-           flat: Optional[dict] = None) -> dict:
+           flat: Optional[dict] = None,
+           dim_extras: Optional[dict] = None) -> dict:
     """统一渲染主入口 (M4 布局 + M3 几何 + M5 标注 + M6 加工 + 图框 + 展开视图).
 
     Args:
@@ -1663,17 +1709,19 @@ def render(projection: dict,
     # === 钣金折弯线标注 (钣金特有, 对标样例) ===
     bend_count = render_bend_lines(msp, projection, layout)
 
-    # === M5 孔位置标注 (每类钉距基准X/Y, 工程师定位用) ===
-    hole_dim_count = render_hole_position_dims(msp, projection, layout)
-
-    # === M5 孔径标注 (每类钉标直径φ, 对标样例直径DIMENSION) ===
-    dia_count = render_diameter_dims(msp, projection, layout)
-
-    # === M5 侧视图标注 (板厚+侧向特征, 多视图标注) ===
-    side_count = render_side_dims(msp, projection, layout)
+    # === M5 内建遗留标注 (孔位/孔径/侧向) ===
+    # annotation 在场时全部跳过: 与标注链语义重复(宪法D5), 且不在
+    # dim_handles 表内导致A1精修无法触达(56×79永不收敛的根因)
+    if annotation:
+        hole_dim_count = dia_count = side_count = 0
+    else:
+        hole_dim_count = render_hole_position_dims(msp, projection, layout)
+        dia_count = render_diameter_dims(msp, projection, layout)
+        side_count = render_side_dims(msp, projection, layout)
 
     # === M5 标注 ===
     dims, dim_source = _resolve_dims(plan, annotation)
+    dim_handles = {}  # 标注序号 → DXF handle (两遍渲染A1精修用)
     # 若 plan 提供标注, 需把 plan 的坐标(可能是零件坐标)映射到视图;
     # annotator 已用视图局部坐标 (p1=origin+offset), 这里一致处理.
     # 各视图图纸 bbox + 线段清单 (A2避让用): 投影局部几何 → to_abs
@@ -1741,7 +1789,9 @@ def render(projection: dict,
                                 max(_c0[0], _c1[0]), max(_c0[1], _c1[1]))
 
     ann_stats = render_annotation(msp, dims, layout, source=dim_source,
-                                  view_bboxes=view_bboxes, view_segs=view_segs)
+                                  view_bboxes=view_bboxes, view_segs=view_segs,
+                                  dim_extras=dim_extras,
+                                  collect_handles=dim_handles)
 
     # === M6 加工说明 ===
     tech_list = _build_tech_requirements(plan, geometry)
@@ -1763,6 +1813,7 @@ def render(projection: dict,
     # === 渲染报告 (M7 审计输入) ===
     report = {
         'output': output_dxf,
+        'dim_handles': dict(dim_handles),
         'sheet': layout.sheet,
         'sheet_size': list(layout.sheet_size),
         'scale': layout.scale,
@@ -1921,7 +1972,49 @@ def main(argv: Optional[List[str]] = None) -> int:
               file=sys.stderr)
         return 1
 
-    report = render(proj, plan, ann, geom, args.output, flat=flat)
+    # 两遍渲染法: 首渲 → 读产物真实文字位置 → 冲突修正量 → 重渲 (宪法A1, 估算法不可靠的根治)
+    extras = {}
+    bump_counts = {}
+    report = None
+    for _pass in range(8):
+        report = render(proj, plan, ann, geom, args.output, flat=flat,
+                        dim_extras=extras or None)
+        handles = report.get('dim_handles', {})
+        try:
+            import ezdxf as _ez
+            from src.engine.rules import _dim_text_bbox as _tb
+            _doc = _ez.readfile(args.output)
+            _dims = list(_doc.modelspace().query('DIMENSION'))
+            _hb = {}
+            for _d in _dims:
+                _b = _tb(_d, _doc)
+                if _b:
+                    _hb[_d.dxf.handle] = _b
+            _inv = {v: k for k, v in handles.items()}
+            _bump = set()
+            _items = list(_hb.items())
+            for _i in range(len(_items)):
+                for _j in range(_i + 1, len(_items)):
+                    _a, _b = _items[_i][1], _items[_j][1]
+                    if not (_a[2] <= _b[0] or _a[0] >= _b[2] or
+                            _a[3] <= _b[1] or _a[1] >= _b[3]):
+                        # 推累计次数少的成员 (短尺寸文字被ezdxf外置, 单向推不动;
+                        # 水平/垂直交替推必有一个沿自身轴向分开)
+                        _cand = [_inv.get(_items[_i][0]), _inv.get(_items[_j][0])]
+                        _cand = [c for c in _cand if c is not None]
+                        if not _cand:
+                            continue
+                        _pick = min(_cand, key=lambda c: (bump_counts.get(c, 0), c))
+                        _bump.add(_pick)
+            if not _bump:
+                break
+            for _idx in _bump:
+                extras[_idx] = extras.get(_idx, 0.0) + 9.0
+                bump_counts[_idx] = bump_counts.get(_idx, 0) + 1
+            print(f'  [A1精修 pass{_pass + 1}] 修正 {len(_bump)} 处文字冲突')
+        except Exception as _ex:  # noqa: BLE001
+            print(f'  [A1精修] 跳过: {_ex}')
+            break
 
     # 输出报告
     print(f"[render_engine] {report['output']}")

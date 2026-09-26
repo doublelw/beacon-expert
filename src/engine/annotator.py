@@ -139,6 +139,11 @@ class _Placer:
                 return level
             level += 1
 
+    def pool_depth(self, view: str, angle: float, side: str) -> int:
+        """该侧层池当前深度 (层数) — lane预算控制用 (样例每带4-6层)."""
+        lanes = self._lanes.get((view, angle, side))
+        return (max(lv for (lv, l, h) in lanes) + 1) if lanes else 0
+
     # leader / radius 折线 bbox 碰撞(简化: 只在同 view 内 leader 区域)
     def place_freeform(self, view: str, bbox: tuple[float, float, float, float],
                        taken: list | None = None) -> bool:
@@ -285,30 +290,91 @@ def annotate(geometry: dict, projection: dict | None = None,
     _lin('Left', 90, 'left',
          (left_ox + by0, left_oy + bz0), (left_ox + by0, left_oy + bz1), D, f'{D:.1f}')
 
-    # === 2. 孔距链式标注 (Top 视图, Yu 2006 DP 分层) ======================
-    # X 方向: 基准(板左边 bx0) -> 各独特孔 x -> 板右边 bx1
-    unique_x = sorted({round(h['x'], 1) for h in holes})
-    chain_x = _clean_chain(unique_x, bx0, bx1)
-    assign_x = chain_layers_dp(chain_x)
-    for i in range(len(chain_x) - 1):
-        lo, hi = chain_x[i], chain_x[i + 1]
-        seg = round(hi - lo, 1)
-        # 宪法D1: 全部链段必标(样例最小线性1.2mm, 微段过滤致孔坐标不可达=违宪)
-        # <6mm小段不共层(端点共享文字必叠), ≥6mm链式相邻共层(规范允许)
-        _lin('Top', 0, 'bottom',
-             (top_ox + lo, top_oy + by0), (top_ox + hi, top_oy + by0), seg, f'{seg:g}',
-             allow_touch=(hi - lo) >= 6.0)
+    # === 2. 孔距链式标注 (孔簇局部基准 + 就近侧向, 对标样例四侧分布) =======
+    # 导演语义(样例逆向): 链放在离所标特征最近的一侧 —
+    # 下排孔的链在板下方, 上排孔的链在板上方, 右侧孔的Y链在板右侧.
+    # 每侧只承担就近簇 → 带高减半, 引出线最短 (全挤一侧的教训: 09-14视觉审查)
+    def _clusters(coords, gap=15.0):
+        """坐标聚类: 相邻间距>gap 切簇 → [簇列表, 每簇=有序坐标list]"""
+        out, cur = [], [coords[0]]
+        for c in coords[1:]:
+            if c - cur[-1] > gap:
+                out.append(cur)
+                cur = [c]
+            else:
+                cur.append(c)
+        out.append(cur)
+        return out
 
-    # Y 方向: 板下边 by0 -> 各独特孔 y -> 板上边 by1, 放板左侧
+    def _holes_near_x(cl):
+        """x坐标属于该簇的孔集合"""
+        cs = set(cl)
+        return [h for h in holes if round(h['x'], 1) in cs]
+
+    def _holes_near_y(cl):
+        cs = set(cl)
+        return [h for h in holes if round(h['y'], 1) in cs]
+
+    # X 方向 (bottom/top 按簇就近): 板左缘→各簇→板右缘
+    unique_x = sorted({round(h['x'], 1) for h in holes})
+    prev_x = bx0
+    for cl in _clusters(unique_x):
+        # 导演决策: 该簇孔的平均y离哪条板边近 → 链放那侧
+        hs = _holes_near_x(cl)
+        mean_dy_bottom = sum(abs(h['y'] - by0) for h in hs) / max(len(hs), 1)
+        mean_dy_top = sum(abs(by1 - h['y']) for h in hs) / max(len(hs), 1)
+        side_x = 'bottom' if mean_dy_bottom <= mean_dy_top else 'top'
+        # lane预算: 该侧已≥6层时换对侧 (样例每带4-6层, 层数爆炸=带冲出图纸)
+        if placer.pool_depth('Top', 0, side_x) >= 6:
+            side_x = 'top' if side_x == 'bottom' else 'bottom'
+        # 引出线锚点必须在所贴板边 (锚错边=引出线纵穿全件, 09-27视觉审查)
+        ay = by0 if side_x == 'bottom' else by1
+        lo, hi = cl[0], cl[-1]
+        if round(lo - prev_x, 1) >= 1.2:  # 簇位置段 (定位簇)
+            _lin('Top', 0, side_x,
+                 (top_ox + prev_x, top_oy + ay), (top_ox + lo, top_oy + ay),
+                 round(lo - prev_x, 1), f'{round(lo - prev_x, 1):g}',
+                 allow_touch=False)
+        for a, b in zip(cl, cl[1:]):       # 簇内链 (短, 贴特征)
+            seg = round(b - a, 1)
+            _lin('Top', 0, side_x,
+                 (top_ox + a, top_oy + ay), (top_ox + b, top_oy + ay), seg,
+                 f'{seg:g}', allow_touch=(b - a) >= 6.0)
+        prev_x = hi
+    if round(bx1 - prev_x, 1) >= 1.2:      # 收尾段 (放bottom, 定位整体)
+        _lin('Top', 0, 'bottom',
+             (top_ox + prev_x, top_oy + by0), (top_ox + bx1, top_oy + by0),
+             round(bx1 - prev_x, 1), f'{round(bx1 - prev_x, 1):g}',
+             allow_touch=False)
+
+    # Y 方向 (left/right 按簇就近): 板下缘→各簇→板上缘
     unique_y = sorted({round(h['y'], 1) for h in holes})
-    chain_y = _clean_chain(unique_y, by0, by1)
-    assign_y = chain_layers_dp(chain_y)
-    for i in range(len(chain_y) - 1):
-        lo, hi = chain_y[i], chain_y[i + 1]
-        seg = round(hi - lo, 1)
+    prev_y = by0
+    for cl in _clusters(unique_y):
+        hs = _holes_near_y(cl)
+        mean_dx_left = sum(abs(h['x'] - bx0) for h in hs) / max(len(hs), 1)
+        mean_dx_right = sum(abs(bx1 - h['x']) for h in hs) / max(len(hs), 1)
+        side_y = 'left' if mean_dx_left <= mean_dx_right else 'right'
+        if placer.pool_depth('Top', 90, side_y) >= 6:
+            side_y = 'left' if side_y == 'right' else 'right'
+        ax = bx0 if side_y == 'left' else bx1
+        lo, hi = cl[0], cl[-1]
+        if round(lo - prev_y, 1) >= 1.2:
+            _lin('Top', 90, side_y,
+                 (top_ox + ax, top_oy + prev_y), (top_ox + ax, top_oy + lo),
+                 round(lo - prev_y, 1), f'{round(lo - prev_y, 1):g}',
+                 allow_touch=False)
+        for a, b in zip(cl, cl[1:]):
+            seg = round(b - a, 1)
+            _lin('Top', 90, side_y,
+                 (top_ox + ax, top_oy + a), (top_ox + ax, top_oy + b), seg,
+                 f'{seg:g}', allow_touch=(b - a) >= 6.0)
+        prev_y = hi
+    if round(by1 - prev_y, 1) >= 1.2:
         _lin('Top', 90, 'left',
-             (top_ox + bx0, top_oy + lo), (top_ox + bx0, top_oy + hi), seg, f'{seg:g}',
-             allow_touch=(hi - lo) >= 6.0)
+             (top_ox + bx0, top_oy + prev_y), (top_ox + bx0, top_oy + by1),
+             round(by1 - prev_y, 1), f'{round(by1 - prev_y, 1):g}',
+             allow_touch=False)
 
     # === 3. 基准孔定位强化 (GB: 关键角部孔相对板边的绝对距离, 单独放对边) ===
     # 链式标注的"基准段"(板边 -> 第一个孔)已含第一个孔定位; 这里只对最关键的
