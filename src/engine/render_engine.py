@@ -1162,7 +1162,15 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                     bump.add(j)
         if bump:
             for j in sorted(bump):
-                placements[j]['extra'] += 9.0
+                pl_j = placements[j]
+                if pl_j is not None and pl_j.get('kind') == 'linear':
+                    # extras封顶: 同侧累计≥27mm改换对侧 (带高有界, 旧版v3对照)
+                    if pl_j['extra'] >= 27 and not pl_j['flip']:
+                        pl_j['flip'] = True
+                    else:
+                        pl_j['extra'] += 9.0
+                else:
+                    pl_j['extra'] = pl_j.get('extra', 0.0) + 9.0
             continue
         break  # A1+A2 全清 → 收敛
 

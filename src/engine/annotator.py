@@ -108,7 +108,8 @@ class _Placer:
         self._lanes: dict[tuple, list[tuple[int, float, float]]] = {}
 
     def place_linear(self, view: str, angle: float, side: str,
-                     span_lo: float, span_hi: float, allow_touch: bool = False) -> int:
+                     span_lo: float, span_hi: float, allow_touch: bool = False,
+                     level_hint: int | None = None) -> int:
         """
         为一条 linear 标注分配层号(离板边由近到远 = 0,1,2...)。
         span_lo/hi: 标注在"沿板边方向"上的坐标区间(用于同层碰撞)。
@@ -125,7 +126,7 @@ class _Placer:
         key = (view, angle, side)
         lo, hi = sorted((span_lo, span_hi))
         lanes = self._lanes.setdefault(key, [])
-        level = 0
+        level = level_hint if level_hint is not None else 0
         while True:
             occupied = [(l, h) for (lv, l, h) in lanes if lv == level]
             if allow_touch:
@@ -137,6 +138,10 @@ class _Placer:
             if not clash:
                 lanes.append((level, lo, hi))
                 return level
+            if level_hint is not None:
+                # 交错提示层被占 → 顺延 (微段交错仍保序)
+                level += 1
+                continue
             level += 1
 
     def pool_depth(self, view: str, angle: float, side: str) -> int:
@@ -265,12 +270,13 @@ def annotate(geometry: dict, projection: dict | None = None,
     dims: list[Dimension] = []
     placer = _Placer()
 
-    def _lin(view, angle, side, p1, p2, value, text='', allow_touch=False):
+    def _lin(view, angle, side, p1, p2, value, text='', allow_touch=False,
+             level_hint=None):
         """放置一条 linear 标注: 由 placer 决定 level, side 决定板边侧, 统一登记。"""
         x1, y1 = p1; x2, y2 = p2
         span = (min(x1, x2), max(x1, x2)) if angle == 0 else (min(y1, y2), max(y1, y2))
         level = placer.place_linear(view, angle, side, span[0], span[1],
-                                    allow_touch=allow_touch)
+                                    allow_touch=allow_touch, level_hint=level_hint)
         dims.append(Dimension('linear', p1, p2, value, view=view,
                               level=level, side=side, angle=angle, text=text))
 
@@ -322,8 +328,11 @@ def annotate(geometry: dict, projection: dict | None = None,
     def _emit_chain_runs(coords, ax, ay, angle, side):
         """簇内标注 (GB/T 16675.2 简化注法, 用户反馈: 样例只标关键尺寸):
         等距run折叠为「个数×间距」+总长; 不规则段保留单段链式.
-        D1重建: 检查器对 n×p 文本按算术展开 interior 坐标."""
+        D1重建: 检查器对 n×p 文本按算术展开 interior 坐标.
+        微段交错分层: 段宽<文字宽(≈12mm件面)时奇偶段交替level 0/1 —
+        防同层文字叠(A1尖刺森林的根源, 旧版v3对照 09-27)."""
         i, n = 0, len(coords)
+        stagger = 0
         while i < n - 1:
             p = round(coords[i + 1] - coords[i], 1)
             j = i + 1
@@ -331,9 +340,13 @@ def annotate(geometry: dict, projection: dict | None = None,
                 j += 1
             k = j - i  # run 内间距数
             if k == 1:
+                seg = round(coords[i + 1] - coords[i], 1)
+                hint = (stagger % 7) if seg < 12 else None
+                if hint is not None:
+                    stagger += 1
                 _lin('Top', angle, side,
                      _pt(coords[i], ax, ay, angle), _pt(coords[i + 1], ax, ay, angle),
-                     p, f'{p:g}', allow_touch=p >= 6.0)
+                     p, f'{p:g}', allow_touch=p >= 6.0, level_hint=hint)
             else:
                 _lin('Top', angle, side,
                      _pt(coords[i], ax, ay, angle), _pt(coords[i + 1], ax, ay, angle),
