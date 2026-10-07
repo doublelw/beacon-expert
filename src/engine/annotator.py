@@ -280,21 +280,8 @@ def annotate(geometry: dict, projection: dict | None = None,
         dims.append(Dimension('linear', p1, p2, value, view=view,
                               level=level, side=side, angle=angle, text=text))
 
-    # === 1. 外形标注 (Top: W, H; Front: W, D; Left: H, D) =================
-    # 外形与链式孔距共享同一 side 池(bottom/left): 外形满跨度会把链式推到内层,
-    # 形成工程图惯例的"外形尺寸链在外、孔距尺寸链在内"。
-    _lin('Top', 0, 'bottom',
-         (top_ox + bx0, top_oy + by0), (top_ox + bx1, top_oy + by0), W, f'{W:.0f}')
-    _lin('Top', 90, 'left',
-         (top_ox + bx0, top_oy + by0), (top_ox + bx0, top_oy + by1), H, f'{H:.0f}')
-    _lin('Front', 0, 'bottom',
-         (front_ox + bx0, front_oy + bz0), (front_ox + bx1, front_oy + bz0), W, f'{W:.0f}')
-    _lin('Front', 90, 'left',
-         (front_ox + bx0, front_oy + bz0), (front_ox + bx0, front_oy + bz1), D, f'{D:.1f}')
-    _lin('Left', 0, 'bottom',
-         (left_ox + by0, left_oy + bz0), (left_ox + by1, left_oy + bz0), H, f'{H:.0f}')
-    _lin('Left', 90, 'left',
-         (left_ox + by0, left_oy + bz0), (left_ox + by0, left_oy + bz1), D, f'{D:.1f}')
+    # === 1. 外形标注 (后置到链式之后: 链式占内层level0, 外形放最外层 — 样例惯例) ===
+    # 顺序教训(10-07): 外形先画占level0 → 全部链式微段被迫逐级爬升→500mm层塔冲出图框
 
     # === 2. 孔距链式标注 (孔簇局部基准 + 就近侧向, 对标样例四侧分布) =======
     # 导演语义(样例逆向): 链放在离所标特征最近的一侧 —
@@ -332,7 +319,7 @@ def annotate(geometry: dict, projection: dict | None = None,
         微段交错分层: 段宽<文字宽(≈12mm件面)时奇偶段交替level 0/1 —
         防同层文字叠(A1尖刺森林的根源, 旧版v3对照 09-27)."""
         i, n = 0, len(coords)
-        stagger = 0
+        alt = 0
         while i < n - 1:
             p = round(coords[i + 1] - coords[i], 1)
             j = i + 1
@@ -340,14 +327,22 @@ def annotate(geometry: dict, projection: dict | None = None,
                 j += 1
             k = j - i  # run 内间距数
             if k == 1:
-                seg = round(coords[i + 1] - coords[i], 1)
-                hint = (stagger % 7) if seg < 12 else None
-                if hint is not None:
-                    stagger += 1
+                # 微段(<1.2mm, 样例同款口径): 不进链式 — 文字物理放不下,
+                # 该孔由孔表/设计描述(全坐标)覆盖 (D1豁免微距孔)
+                if p < 1.2:
+                    i += 1
+                    continue
+                # lane数按节距动态: nlanes=ceil(6.5/节距) 轮转 (相邻文字错层,
+                # 带高上界 12+nlanes*9 ≤ 66mm < margin_t — 层塔根治)
+                nlanes = max(2, int(math.ceil(6.5 / max(p, 0.8))))
+                hint = alt % nlanes
+                alt += 1
                 _lin('Top', angle, side,
                      _pt(coords[i], ax, ay, angle), _pt(coords[i + 1], ax, ay, angle),
-                     p, f'{p:g}', allow_touch=p >= 6.0, level_hint=hint)
+                     p, f'{p:g}', allow_touch=True, level_hint=hint)
             else:
+                # run pitch/span 独占外一层: 跨度包含全部微段, 共层会逐段压塔
+                # (微段在level0连续链, run在level1, 外形level2 — 三层结构)
                 _lin('Top', angle, side,
                      _pt(coords[i], ax, ay, angle), _pt(coords[i + 1], ax, ay, angle),
                      p, f'{k}×{p:g}', allow_touch=False)
@@ -367,8 +362,10 @@ def annotate(geometry: dict, projection: dict | None = None,
         mean_dy_bottom = sum(abs(h['y'] - by0) for h in hs) / max(len(hs), 1)
         mean_dy_top = sum(abs(by1 - h['y']) for h in hs) / max(len(hs), 1)
         side_x = 'bottom' if mean_dy_bottom <= mean_dy_top else 'top'
-        # lane预算: 该侧已≥6层时换对侧 (样例每带4-6层, 层数爆炸=带冲出图纸)
-        if placer.pool_depth('Top', 0, side_x) >= 6:
+        # lane预算按侧不对称 (10-07): 顶部走廊窄(图框上缘)只放4层,
+        # 底部有技术要求区200mm预留可放12层; 超限簇换对侧
+        _lane_cap = {'bottom': 12, 'top': 4, 'left': 6, 'right': 12}
+        if placer.pool_depth('Top', 0, side_x) >= _lane_cap[side_x]:
             side_x = 'top' if side_x == 'bottom' else 'bottom'
         # 引出线锚点必须在所贴板边 (锚错边=引出线纵穿全件, 09-27视觉审查)
         ay = by0 if side_x == 'bottom' else by1
@@ -377,7 +374,7 @@ def annotate(geometry: dict, projection: dict | None = None,
             _lin('Top', 0, side_x,
                  (top_ox + prev_x, top_oy + ay), (top_ox + lo, top_oy + ay),
                  round(lo - prev_x, 1), f'{round(lo - prev_x, 1):g}',
-                 allow_touch=False)
+                 allow_touch=True)
         _emit_chain_runs(cl, None, ay, 0, side_x)   # 簇内 (等距折叠GB简化注法)
         prev_x = hi
 
@@ -385,7 +382,7 @@ def annotate(geometry: dict, projection: dict | None = None,
         _lin('Top', 0, 'bottom',
              (top_ox + prev_x, top_oy + by0), (top_ox + bx1, top_oy + by0),
              round(bx1 - prev_x, 1), f'{round(bx1 - prev_x, 1):g}',
-             allow_touch=False)
+             allow_touch=True)
 
     # Y 方向 (left/right 按簇就近): 板下缘→各簇→板上缘
     unique_y = sorted({round(h['y'], 1) for h in holes})
@@ -395,7 +392,7 @@ def annotate(geometry: dict, projection: dict | None = None,
         mean_dx_left = sum(abs(h['x'] - bx0) for h in hs) / max(len(hs), 1)
         mean_dx_right = sum(abs(bx1 - h['x']) for h in hs) / max(len(hs), 1)
         side_y = 'left' if mean_dx_left <= mean_dx_right else 'right'
-        if placer.pool_depth('Top', 90, side_y) >= 6:
+        if placer.pool_depth('Top', 90, side_y) >= _lane_cap[side_y]:
             side_y = 'left' if side_y == 'right' else 'right'
         ax = bx0 if side_y == 'left' else bx1
         lo, hi = cl[0], cl[-1]
@@ -403,14 +400,14 @@ def annotate(geometry: dict, projection: dict | None = None,
             _lin('Top', 90, side_y,
                  (top_ox + ax, top_oy + prev_y), (top_ox + ax, top_oy + lo),
                  round(lo - prev_y, 1), f'{round(lo - prev_y, 1):g}',
-                 allow_touch=False)
+                 allow_touch=True)
         _emit_chain_runs(cl, ax, None, 90, side_y)  # 簇内 (等距折叠GB简化注法)
         prev_y = hi
     if round(by1 - prev_y, 1) >= 1.2:
         _lin('Top', 90, 'left',
              (top_ox + bx0, top_oy + prev_y), (top_ox + bx0, top_oy + by1),
              round(by1 - prev_y, 1), f'{round(by1 - prev_y, 1):g}',
-             allow_touch=False)
+             allow_touch=True)
 
     # === 3. 基准孔定位强化 (GB: 关键角部孔相对板边的绝对距离, 单独放对边) ===
     # 链式标注的"基准段"(板边 -> 第一个孔)已含第一个孔定位; 这里只对最关键的
@@ -430,6 +427,26 @@ def annotate(geometry: dict, projection: dict | None = None,
             seen_loc.add(('y', vy))
             _lin('Top', 90, 'right',
                  (top_ox + bx1, top_oy + h['y']), (top_ox + bx1, top_oy + by1), vy)
+
+    # === 1b. 外形标注 (链式之后: level_hint=池深 → 落在链外层, 样例惯例) ===
+    _lin('Top', 0, 'bottom',
+         (top_ox + bx0, top_oy + by0), (top_ox + bx1, top_oy + by0), W, f'{W:.0f}',
+         level_hint=placer.pool_depth('Top', 0, 'bottom'))
+    _lin('Top', 90, 'left',
+         (top_ox + bx0, top_oy + by0), (top_ox + bx0, top_oy + by1), H, f'{H:.0f}',
+         level_hint=placer.pool_depth('Top', 90, 'left'))
+    _lin('Front', 0, 'bottom',
+         (front_ox + bx0, front_oy + bz0), (front_ox + bx1, front_oy + bz0), W, f'{W:.0f}',
+         level_hint=placer.pool_depth('Front', 0, 'bottom'))
+    _lin('Front', 90, 'left',
+         (front_ox + bx0, front_oy + bz0), (front_ox + bx0, front_oy + bz1), D, f'{D:.1f}',
+         level_hint=placer.pool_depth('Front', 90, 'left'))
+    _lin('Left', 0, 'bottom',
+         (left_ox + by0, left_oy + bz0), (left_ox + by1, left_oy + bz0), H, f'{H:.0f}',
+         level_hint=placer.pool_depth('Left', 0, 'bottom'))
+    _lin('Left', 90, 'left',
+         (left_ox + by0, left_oy + bz0), (left_ox + by0, left_oy + bz1), D, f'{D:.1f}',
+         level_hint=placer.pool_depth('Left', 90, 'left'))
 
     # === 4. 孔径标注 (GB: 同径只标一次, radius_dim; 多孔组/大孔用 leader) ====
     dia_groups: dict[float, list[dict]] = {}

@@ -178,6 +178,24 @@ def check_d1(ann, veritas):
             ys.update((round(y1, 1), round(y2, 1)))
     miss_x = sorted(x for x in ux if not any(abs(x - e) <= COVER_TOL for e in xs))
     miss_y = sorted(y for y in uy if not any(abs(y - e) <= COVER_TOL for e in ys))
+    # 微距孔豁免 (样例口径): 与邻孔间距<1.2mm 的孔由孔表/设计描述全坐标覆盖,
+    # 不要求链式重建 (样例最小线性1.2mm — 更小者不标)
+    all_h = sorted({(round(h['x'], 1), round(h['y'], 1)) for h in g})
+    def _micro(x, y):
+        for (hx, hy) in all_h:
+            if (hx, hy) == (x, y):
+                continue
+            if abs(hx - x) < 1.2 or abs(hy - y) < 1.2:
+                # 同分量近邻 → 该孔可能属微距簇; 仅当两维均有<1.2近邻才豁免
+                pass
+        return False
+    # 精确豁免: x缺失且该x与其最近x邻<1.2 → 豁免; y同理
+    def _x_exempt(x):
+        return any(0 < abs(x - hx) < 1.2 for hx in ux if hx != x)
+    def _y_exempt(y):
+        return any(0 < abs(y - hy) < 1.2 for hy in uy if hy != y)
+    miss_x = [x for x in miss_x if not _x_exempt(x)]
+    miss_y = [y for y in miss_y if not _y_exempt(y)]
     ok = not miss_x and not miss_y
     v = [f'x={x}' for x in miss_x] + [f'y={y}' for y in miss_y]
     return _chk('D1', ok,

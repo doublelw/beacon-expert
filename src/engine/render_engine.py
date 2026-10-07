@@ -133,9 +133,8 @@ SHEET_SIZES = {
     'A3': (420, 297),  'A4': (297, 210),
 }
 
-# 渲染视图集 (GB/T 17452: 基本视图按需选用; 客户样例无 Back —
-# 后视图为 Front 镜像, 信息量低且独占大量采样样条, 默认不出)
-RENDER_VIEWS = {'Top', 'Front', 'Bottom', 'Left', 'Right'}
+# 渲染视图集 (用户定版: 主正视图居中+上下左右围绕+后视图与主视图同一水平线)
+RENDER_VIEWS = {'Top', 'Front', 'Bottom', 'Left', 'Right', 'Back'}
 
 # 布局间距系数 (SMART)
 SPACING_H_FACTOR = 0.3   # 上下间距 = 板高 H × 0.3
@@ -327,8 +326,12 @@ def _pick_sheet(W: float, H: float, D: float) -> Tuple[str, Tuple[float, float],
     return best[1], best[2], round(best[3], 4)
 
 
-def layout_six_views(projection: dict, plan: Optional[dict] = None) -> LayoutResult:
+def layout_six_views(projection: dict, plan: Optional[dict] = None,
+                     bands: Optional[dict] = None) -> LayoutResult:
     """M4 第一角六视图 SMART 布局 (GB/T 17452).
+
+    bands: 标注层带高度需求 {top,bottom,left,right} (mm), 计入边距保证
+    标注塔不冲出图框 (09-27教训).
 
     板类零件约定 (projection.py VIEW_DEFS, 板面在 XY, 厚度沿 Z):
       Front/Back  axes=(x,y): 板面 W×H (孔正圆, 主视图)
@@ -415,11 +418,11 @@ def layout_six_views(projection: dict, plan: Optional[dict] = None) -> LayoutRes
     has_back = 'Back' in view_info
     back_col_w = _w('Back') * s if has_back else 0
 
-    # 图纸可用区 (边距 + 标题栏 + 技术要求)
-    margin_l = 60.0
-    margin_r = 210.0     # 右侧标题栏
-    margin_t = 40.0
-    margin_b = 200.0     # 底部技术要求
+    # 图纸可用区 (边距 + 标题栏 + 技术要求 + 标注层带需求)
+    margin_l = 60.0 + (bands or {}).get('left', 0.0)
+    margin_r = 210.0 + (bands or {}).get('right', 0.0)   # 右侧标题栏
+    margin_t = 40.0 + (bands or {}).get('top', 0.0) * 2.0   # ×2: A1精修extras余量
+    margin_b = 200.0 + (bands or {}).get('bottom', 0.0)  # 底部技术要求
     avail_w = sw - margin_l - margin_r
     avail_h = sh - margin_t - margin_b
 
@@ -746,6 +749,20 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
                     _e.pop('hole_type', None)
                     _stripped += 1
         counts['phantom_stripped'] = _stripped
+    # 3D为唯一事实源 (用户反馈: 孔识别不对/隐藏元件不显示):
+    # Top视图孔直接取 veritas Z轴孔 (该视图可见轴向), 替换投影误判的circles;
+    # 非Z轴孔在该视图为隐藏特征, 不绘制.
+    if veritas and 'Top' in projection.get('views', {}):
+        _zholes = []
+        for _h in veritas.get('features', []):
+            if _h.get('type') == 'PIERCING' and _h.get('axis_dir') == 'Z':
+                _radii = _h.get('all_radii') or [_h.get('radius', 0)]
+                _zholes.append({'cx': round(_h['position'][0], 2),
+                                'cy': round(_h['position'][1], 2),
+                                'r': round(min(_radii), 2),
+                                'hole_type': _h.get('hole_type', 'clear'),
+                                'axis_dir': 'Z'})
+        projection['views']['Top']['circles'] = _zholes
     views = projection.get('views', {})
     _std_drawn = set()  # 已画standard_parts的位置(vn,cx,cy,r) 防止circles+arcs重复
 
@@ -1137,7 +1154,7 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                 if not pl['flip']:
                     pl['flip'] = True
                 else:
-                    pl['extra'] += 9.0
+                    pl['extra'] = pl['extra'] + 9.0 if pl['extra'] < 30 else 30.0
                 fixed = True
                 break
         if fixed:
@@ -1168,7 +1185,7 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                     if pl_j['extra'] >= 27 and not pl_j['flip']:
                         pl_j['flip'] = True
                     else:
-                        pl_j['extra'] += 9.0
+                            pl_j['extra'] = pl_j['extra'] + 9.0 if pl_j['extra'] < 30 else 30.0
                 else:
                     pl_j['extra'] = pl_j.get('extra', 0.0) + 9.0
             continue
@@ -1294,8 +1311,9 @@ def _build_tech_requirements(plan: Optional[dict], geometry: Optional[dict]) -> 
     return tech
 
 
-def render_tech_requirements(msp, tech_list: List[str], layout: LayoutResult) -> None:
-    """渲染技术要求 (MTEXT, 多行, GB 格式)."""
+def render_tech_requirements(msp, tech_list: List[str], layout: LayoutResult,
+                             part_number: str = '') -> None:
+    """渲染技术要求 (MTEXT, 多行, GB 格式). 左下角 = 说明 + 编码 (用户定版)."""
     sw, sh = layout.sheet_size
     # 技术要求放在图纸左下角
     x = 60
@@ -1321,6 +1339,17 @@ def render_tech_requirements(msp, tech_list: List[str], layout: LayoutResult) ->
                 'insert': (x, y),
                 'char_height': FONT_HEIGHT_DIM,
                 'style': FONT_CJK,
+            })
+        y -= (FONT_HEIGHT_DIM + 4) * (len(tech_list) + 1)
+
+    # 编码 (左下角 = 说明 + 编码, 用户定版; 与「技术要求」标题同行, 不出图框)
+    if part_number:
+        msp.add_text(
+            f'编码: {part_number}',
+            dxfattribs={
+                'height': FONT_HEIGHT_TEXT,
+                'insert': (x + 90, y + 5),
+                'layer': 'TEXT', 'style': FONT_CJK,
             })
 
 
@@ -1715,7 +1744,21 @@ def render(projection: dict,
     proj_filtered = dict(projection)
     proj_filtered['views'] = {k: v for k, v in projection.get('views', {}).items()
                               if k in RENDER_VIEWS} or projection.get('views', {})
-    layout = layout_six_views(proj_filtered, plan)
+    # === M5 标注决策 (前置于布局: 层带高度是布局输入, 保证标注不冲出图框) ===
+    dims, dim_source = _resolve_dims(plan, annotation)
+    dim_handles = {}  # 标注序号 → DXF handle (两遍渲染A1精修用)
+
+    # 层带需求: 每侧 = 首层12 + (最大层+1)*9 + 余量5 (09-27标注塔冲出图框教训)
+    bands = {'top': 0.0, 'bottom': 0.0, 'left': 0.0, 'right': 0.0}
+    for _d in dims:
+        if _d.get('type') != 'linear' or _d.get('view') != 'Top':
+            continue
+        _s = _d.get('side', 'bottom')
+        _need = 12 + (_d.get('level', 0) + 1) * 9 + 5
+        if _need > bands.get(_s, 0):
+            bands[_s] = _need
+
+    layout = layout_six_views(proj_filtered, plan, bands=bands)
 
     # === ezdxf 文档 ===
     doc = ezdxf.new('R2013', setup=True)
@@ -1751,9 +1794,7 @@ def render(projection: dict,
         dia_count = render_diameter_dims(msp, projection, layout)
         side_count = render_side_dims(msp, projection, layout)
 
-    # === M5 标注 ===
-    dims, dim_source = _resolve_dims(plan, annotation)
-    dim_handles = {}  # 标注序号 → DXF handle (两遍渲染A1精修用)
+    # === M5 标注 === (决策已于布局前完成; 此处沿用 dims/dim_handles)
     # 若 plan 提供标注, 需把 plan 的坐标(可能是零件坐标)映射到视图;
     # annotator 已用视图局部坐标 (p1=origin+offset), 这里一致处理.
     # 各视图图纸 bbox + 线段清单 (A2避让用): 投影局部几何 → to_abs
@@ -1826,8 +1867,10 @@ def render(projection: dict,
                                   collect_handles=dim_handles)
 
     # === M6 加工说明 ===
+    _tb = (plan or {}).get('title_block', {})
+    _part_number = _tb.get('number', 'BEACON-001')
     tech_list = _build_tech_requirements(plan, geometry)
-    render_tech_requirements(msp, tech_list, layout)
+    render_tech_requirements(msp, tech_list, layout, part_number=_part_number)
 
     # === 图框 / 标题栏 ===
     render_frame(msp, layout, plan, geometry)
@@ -1927,13 +1970,14 @@ def render_flat_view(msp, flat: Optional[dict], layout: 'LayoutResult') -> dict:
     except Exception:  # noqa: BLE001
         return {'status': 'bbox_error'}
     sw, sh = layout.sheet_size
-    x_left = 25.0
+    # 展开图放底部中段 (左下=技术要求+编码, 右下=标题栏 — 用户定版)
+    x_left = 400.0
     x_right = sw - 200.0          # 避开标题栏 (右下 180×56+边距)
     if ext.has_data:
         y_top = ext.extmin.y - 15.0
     else:
         y_top = sh - 40.0
-    y_bot = 70.0                  # 技术要求文字块 (y≈10..60) 之上
+    y_bot = 12.0                  # 底部带 (与技术要求同层但在其右侧)
     avail_w = max(x_right - x_left, 10.0)
     avail_h = max(y_top - y_bot, 10.0)
     scale = min(layout.scale, avail_w / max(w, 1e-6), avail_h / max(h, 1e-6))
