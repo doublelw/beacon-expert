@@ -315,6 +315,36 @@ def annotate(geometry: dict, projection: dict | None = None,
         cs = set(cl)
         return [h for h in holes if round(h['y'], 1) in cs]
 
+    def _pt(v, ax, ay, angle):
+        """簇内坐标→标注点 (X链沿ay锚线, Y链沿ax锚线)"""
+        return (top_ox + ax, top_oy + v) if angle == 90 else (top_ox + v, top_oy + ay)
+
+    def _emit_chain_runs(coords, ax, ay, angle, side):
+        """簇内标注 (GB/T 16675.2 简化注法, 用户反馈: 样例只标关键尺寸):
+        等距run折叠为「个数×间距」+总长; 不规则段保留单段链式.
+        D1重建: 检查器对 n×p 文本按算术展开 interior 坐标."""
+        i, n = 0, len(coords)
+        while i < n - 1:
+            p = round(coords[i + 1] - coords[i], 1)
+            j = i + 1
+            while j < n - 1 and abs(round(coords[j + 1] - coords[j], 1) - p) <= 0.05:
+                j += 1
+            k = j - i  # run 内间距数
+            if k == 1:
+                _lin('Top', angle, side,
+                     _pt(coords[i], ax, ay, angle), _pt(coords[i + 1], ax, ay, angle),
+                     p, f'{p:g}', allow_touch=p >= 6.0)
+            else:
+                _lin('Top', angle, side,
+                     _pt(coords[i], ax, ay, angle), _pt(coords[i + 1], ax, ay, angle),
+                     p, f'{k}×{p:g}', allow_touch=False)
+                span = round(coords[j] - coords[i], 1)
+                if span >= 1.2:
+                    _lin('Top', angle, side,
+                         _pt(coords[i], ax, ay, angle), _pt(coords[j], ax, ay, angle),
+                         span, f'{span:g}', allow_touch=False)
+            i = j
+
     # X 方向 (bottom/top 按簇就近): 板左缘→各簇→板右缘
     unique_x = sorted({round(h['x'], 1) for h in holes})
     prev_x = bx0
@@ -335,12 +365,9 @@ def annotate(geometry: dict, projection: dict | None = None,
                  (top_ox + prev_x, top_oy + ay), (top_ox + lo, top_oy + ay),
                  round(lo - prev_x, 1), f'{round(lo - prev_x, 1):g}',
                  allow_touch=False)
-        for a, b in zip(cl, cl[1:]):       # 簇内链 (短, 贴特征)
-            seg = round(b - a, 1)
-            _lin('Top', 0, side_x,
-                 (top_ox + a, top_oy + ay), (top_ox + b, top_oy + ay), seg,
-                 f'{seg:g}', allow_touch=(b - a) >= 6.0)
+        _emit_chain_runs(cl, None, ay, 0, side_x)   # 簇内 (等距折叠GB简化注法)
         prev_x = hi
+
     if round(bx1 - prev_x, 1) >= 1.2:      # 收尾段 (放bottom, 定位整体)
         _lin('Top', 0, 'bottom',
              (top_ox + prev_x, top_oy + by0), (top_ox + bx1, top_oy + by0),
@@ -364,11 +391,7 @@ def annotate(geometry: dict, projection: dict | None = None,
                  (top_ox + ax, top_oy + prev_y), (top_ox + ax, top_oy + lo),
                  round(lo - prev_y, 1), f'{round(lo - prev_y, 1):g}',
                  allow_touch=False)
-        for a, b in zip(cl, cl[1:]):
-            seg = round(b - a, 1)
-            _lin('Top', 90, side_y,
-                 (top_ox + ax, top_oy + a), (top_ox + ax, top_oy + b), seg,
-                 f'{seg:g}', allow_touch=(b - a) >= 6.0)
+        _emit_chain_runs(cl, ax, None, 90, side_y)  # 簇内 (等距折叠GB简化注法)
         prev_y = hi
     if round(by1 - prev_y, 1) >= 1.2:
         _lin('Top', 90, 'left',

@@ -721,13 +721,31 @@ def _fit_circle(pts: List, r_tol: float = 0.05):
     return (cx, cy, r, a0, a1)
 
 
-def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Optional[dict] = None) -> Dict[str, int]:
+def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Optional[dict] = None,
+                      veritas: Optional[dict] = None) -> Dict[str, int]:
     """渲染六视图几何到 modelspace.
 
     每条几何 (line/arc/spline/circle) 按 ViewLayout.origin 平移到图纸坐标.
     轮廓/孔 → OUTLINE/HOLE 层 (粗实线). 采样样条经 _fit_circle 还原为 ARC.
+    标准件符号必须过位置门 (G7幻影孔: 固定爪R2圆角==孔半径被误判, 09-27用户反馈).
     """
     counts = {'line': 0, 'arc': 0, 'spline': 0, 'circle': 0}
+    # veritas 真实孔位集合 (幻影孔位置门: hole_type符号仅在真孔位绘制)
+    veritas_xy = set()
+    for _h in (veritas or {}).get('features', []):
+        if _h.get('type') == 'PIERCING':
+            veritas_xy.add((round(_h['position'][0], 1), round(_h['position'][1], 1)))
+    # G7 幻影孔清洗: 就地剥离位置不在真孔集的 hole_type 分类
+    # (上游projection_v3按半径分类导致固定爪R2圆角误判, 剥离数入counts供审计)
+    if veritas_xy:
+        _stripped = 0
+        for _vd in projection.get('views', {}).values():
+            for _e in _vd.get('circles', []) + _vd.get('arcs', []):
+                if _e.get('hole_type') and (
+                        round(_e['cx'], 1), round(_e['cy'], 1)) not in veritas_xy:
+                    _e.pop('hole_type', None)
+                    _stripped += 1
+        counts['phantom_stripped'] = _stripped
     views = projection.get('views', {})
     _std_drawn = set()  # 已画standard_parts的位置(vn,cx,cy,r) 防止circles+arcs重复
 
@@ -793,7 +811,10 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
             _aaxis = a.get('axis_dir', 'Z')
             _ahead = a.get('head_face')
             # 标准件: arcs也用standard_parts库(统一, thread弧段在Top/Left/Right)
-            if _aht in ('csink', 'thread', 'clear'):
+            # G7幻影孔位置门: hole_type符号仅在veritas真孔位绘制
+            # (固定爪R2圆角==孔半径2.0被半径分类误判的根治, 09-27用户反馈)
+            _pos_ok = (not veritas_xy) or ((round(a['cx'], 1), round(a['cy'], 1)) in veritas_xy)
+            if _aht in ('csink', 'thread', 'clear') and _pos_ok:
                 _std_key = (vn, round(a['cx'], 0), round(a['cy'], 0), round(a['r'], 1))
                 if _std_key not in _std_drawn:  # 去重(circles已画则arcs不重复)
                     _std_drawn.add(_std_key)
@@ -859,7 +880,9 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
             _axis = ci.get('axis_dir', 'Z')
             _head = ci.get('head_face')
             # 标准件: 用标准件库GB图形(不画HLR圆, 直接标准图形)
-            if _ht in ('csink', 'thread', 'clear'):
+            # G7幻影孔位置门 (同arcs分支)
+            _pos_ok = (not veritas_xy) or ((round(ci['cx'], 1), round(ci['cy'], 1)) in veritas_xy)
+            if _ht in ('csink', 'thread', 'clear') and _pos_ok:
                 _std_key = (vn, round(ci['cx'], 0), round(ci['cy'], 0), round(ci['r'], 1))
                 if _std_key not in _std_drawn:  # 去重(circles+arcs同位置只画一次)
                     _std_drawn.add(_std_key)
@@ -1665,7 +1688,8 @@ def render(projection: dict,
            geometry: Optional[dict] = None,
            output_dxf: str = 'output.dxf',
            flat: Optional[dict] = None,
-           dim_extras: Optional[dict] = None) -> dict:
+           dim_extras: Optional[dict] = None,
+           veritas: Optional[dict] = None) -> dict:
     """统一渲染主入口 (M4 布局 + M3 几何 + M5 标注 + M6 加工 + 图框 + 展开视图).
 
     Args:
@@ -1693,7 +1717,7 @@ def render(projection: dict,
     msp = doc.modelspace()
 
     # === M3 几何 ===
-    geom_counts = render_projection(msp, projection, layout, geometry)
+    geom_counts = render_projection(msp, projection, layout, geometry, veritas=veritas)
 
     # === M5 外形尺寸标注 ===
     # annotation 清单已含外形6尺寸(annotator), 再画 outline_dims 会双写
@@ -1809,6 +1833,12 @@ def render(projection: dict,
     # === 保存 ===
     os.makedirs(os.path.dirname(os.path.abspath(output_dxf)), exist_ok=True)
     doc.saveas(output_dxf)
+    # 清洗后投影落盘 (G7审计对象 = 渲染实际使用的数据; 上游缺陷计数入报告)
+    try:
+        with open(output_dxf + '.proj_cleaned.json', 'w', encoding='utf-8') as _pf:
+            json.dump(proj_filtered, _pf, ensure_ascii=False)
+    except Exception:  # noqa: BLE001
+        pass
 
     # === 渲染报告 (M7 审计输入) ===
     report = {
@@ -1957,6 +1987,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument('--annotation', default=None, help='annotation.json (M5 降级)')
     p.add_argument('--geometry', default=None, help='geometry.json (备用)')
     p.add_argument('--flat', default=None, help='flat.json (展开视图, unfold.py产物)')
+    p.add_argument('--veritas', default=None, help='veritas.json (3D真值, G7幻影孔位置门)')
     p.add_argument('-o', '--output', default='output/fixed_board_gb.dxf',
                    help='输出 DXF')
     args = p.parse_args(argv)
@@ -1966,6 +1997,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     ann = _load(args.annotation)
     geom = _load(args.geometry)
     flat = _load(args.flat)
+    veritas = _load(args.veritas)
 
     if proj is None:
         print(f'[render_engine] ERROR: projection not found: {args.projection}',
@@ -1978,7 +2010,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     report = None
     for _pass in range(8):
         report = render(proj, plan, ann, geom, args.output, flat=flat,
-                        dim_extras=extras or None)
+                        dim_extras=extras or None, veritas=veritas)
         handles = report.get('dim_handles', {})
         try:
             import ezdxf as _ez

@@ -122,11 +122,35 @@ def check_g45(dxf_path):
 
 
 # ---------------------------------------------------------------------------
+# G7 — 幻影孔 (合理性审核: 投影分类的孔必须在3D真值里)
+# ---------------------------------------------------------------------------
+
+def check_g7(proj, veritas):
+    """G7 幻影孔: Top视图分类为孔(csink/thread/clear)的实体,
+    其位置必须在 veritas 真孔集内 (固定爪R2圆角==孔半径误判的教训)."""
+    holes = _holes(veritas)
+    hole_xy = {(round(h['x'], 1), round(h['y'], 1)) for h in holes}
+    top = (proj or {}).get('views', {}).get('Top', {})
+    ents = list(top.get('circles', [])) + list(top.get('arcs', []))
+    phantom = []
+    for e in ents:
+        if e.get('hole_type') in ('csink', 'thread', 'clear'):
+            pos = (round(e['cx'], 1), round(e['cy'], 1))
+            if pos not in hole_xy:
+                phantom.append(f'{e.get("hole_type")}@{pos} r={e.get("r")}')
+    return _chk('G7', not phantom,
+                f'幻影孔(分类孔位不在3D真值)={len(phantom)}, 真孔={len(hole_xy)}', phantom)
+
+
+# ---------------------------------------------------------------------------
 # D 组 — 标注 (基于 annotation.json 3D真值侧 + DXF 数量核对)
 # ---------------------------------------------------------------------------
 
 def check_d1(ann, veritas):
-    """D1 逐孔坐标重建: 每孔 x,y 均可由尺寸链端点+基准精确达到."""
+    """D1 逐孔坐标重建: 每孔 x,y 均可由尺寸链端点+基准精确达到.
+
+    支持等距run折叠 (GB/T 16675.2): 文本 n×p 的尺寸按算术展开 interior 坐标.
+    """
     g = _holes(veritas)
     if not g:
         return _chk('D1', False, 'veritas 无孔')
@@ -138,9 +162,19 @@ def check_d1(ann, veritas):
         if d.get('type') != 'linear' or d.get('view') != 'Top':
             continue
         (x1, y1), (x2, y2) = d['p1'], d['p2']
-        if abs(y1 - y2) <= abs(x1 - x2):      # 水平: 端点携带 x 坐标
+        m = re.match(r'^(\d+)×([\d.]+)$', d.get('text', ''))
+        if m:
+            # 等距run: 从起点按间距展开 count 个坐标 (D1算术重建)
+            k = int(m.group(1))
+            p = float(m.group(2))
+            if abs(y1 - y2) <= abs(x1 - x2):
+                xs.update(round(x1 + i * p, 1) for i in range(k + 1))
+            else:
+                ys.update(round(y1 + i * p, 1) for i in range(k + 1))
+            continue
+        if abs(y1 - y2) <= abs(x1 - x2):
             xs.update((round(x1, 1), round(x2, 1)))
-        else:                                  # 垂直: 端点携带 y 坐标
+        else:
             ys.update((round(y1, 1), round(y2, 1)))
     miss_x = sorted(x for x in ux if not any(abs(x - e) <= COVER_TOL for e in xs))
     miss_y = sorted(y for y in uy if not any(abs(y - e) <= COVER_TOL for e in ys))
@@ -317,13 +351,16 @@ def check_f2(doc):
 # 主入口
 # ---------------------------------------------------------------------------
 
-def run_all(dxf_path, veritas_path=None, annotation_path=None) -> dict:
+def run_all(dxf_path, veritas_path=None, annotation_path=None, proj_path=None) -> dict:
     doc = ezdxf.readfile(dxf_path)
     veritas = json.load(open(veritas_path)) if veritas_path and Path(veritas_path).exists() else {}
     ann = json.load(open(annotation_path)) if annotation_path and Path(annotation_path).exists() else None
+    proj = json.load(open(proj_path)) if proj_path and Path(proj_path).exists() else None
 
     results = []
     results += check_g45(dxf_path)
+    if proj is not None and veritas:
+        results.append(check_g7(proj, veritas))
     if ann is not None:
         results.append(check_d1(ann, veritas) if veritas else _chk('D1', False, '缺 veritas'))
         results.append(check_d2(ann, veritas) if veritas else _chk('D2', False, '缺 veritas'))
@@ -347,10 +384,11 @@ def main(argv=None) -> int:
     p.add_argument('dxf')
     p.add_argument('--veritas', default=None)
     p.add_argument('--annotation', default=None)
+    p.add_argument('--proj', default=None)
     p.add_argument('--json', default=None)
     args = p.parse_args(argv)
 
-    rep = run_all(args.dxf, args.veritas, args.annotation)
+    rep = run_all(args.dxf, args.veritas, args.annotation, args.proj)
     for r in rep['results']:
         mark = 'PASS' if r['ok'] else 'FAIL'
         print(f"  [{mark}] {r['rule']}: {r['detail']}")
