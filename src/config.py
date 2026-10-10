@@ -20,26 +20,47 @@ DB_URL = f"sqlite:///{DB_PATH}"
 # === FreeCAD ===
 def _find_freecadcmd():
     """跨平台探测 freecadcmd."""
+    # 1) PATH
     p = shutil.which("freecadcmd")
     if p:
         return p
+    # 2) 环境变量
     env = os.getenv("FREECAD_BIN")
     if env and os.path.isfile(env):
         return env
-    defaults = {
-        "Darwin": "/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd",
-        "Linux": "/usr/bin/freecadcmd",
-    }
-    d = defaults.get(platform.system())
-    if d and os.path.isfile(d):
-        return d
-    return "freecadcmd"  # fallback
+    # 3) Windows 用户安装版 (Winget/Chocolatey 默认路径)
+    if platform.system() == "Windows":
+        local_prog = Path(os.environ.get("LOCALAPPDATA", "")) / "Programs"
+        if local_prog.exists():
+            for d in local_prog.iterdir():
+                if d.is_dir() and "freecad" in d.name.lower():
+                    exe = d / "bin" / "freecadcmd.exe"
+                    if exe.exists():
+                        return str(exe)
+        # 系统安装版
+        for base in [r"C:\Program Files", r"C:\Program Files (x86)"]:
+            bp = Path(base)
+            if bp.exists():
+                for d in bp.iterdir():
+                    if d.is_dir() and "freecad" in d.name.lower():
+                        exe = d / "bin" / "freecadcmd.exe"
+                        if exe.exists():
+                            return str(exe)
+    # 4) macOS
+    mac = Path("/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd")
+    if mac.exists():
+        return str(mac)
+    # 5) Linux
+    linux = Path("/usr/bin/freecadcmd")
+    if linux.exists():
+        return str(linux)
+    return "freecadcmd"  # fallback — 期望在 PATH 中
 
 FC_BIN = _find_freecadcmd()
 
-# === saas 引擎源 ===
-SAAS_CORE = Path("/Users/ahs/project/Beacon/saas/core")
-SAAS_OUTPUT = Path("/Users/ahs/project/Beacon/saas/output")
+# === saas 引擎源 (本地 beacon-expert 的 core 脚本) ===
+SAAS_CORE = BASE_DIR / "src" / "engine"
+SAAS_OUTPUT = BASE_DIR / "output"
 
 # === GB 机械制图国标知识 skill (LLM 上下文来源) ===
 GB_SKILL_DIR = Path.home() / ".claude" / "skills" / "gb-mechanical-drawing"

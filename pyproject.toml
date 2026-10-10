@@ -21,6 +21,10 @@ dev = ["pytest>=7.0", "pytest-asyncio>=0.21", "httpx>=0.24.0"]
 # cad: 本地钣金平面提取 (engine/flatten.py, vendored text-to-cad cadgen MIT)
 # build123d 0.11.1 已在 Python 3.14 实测 (曲线保真 ARC/CIRCLE + kerf)
 cad = ["build123d>=0.11.0", "shapely>=2.0"]
+# free: FreeCAD CLI 用于 STP→DXF 转换 (Windows: winget install FreeCAD.FreeCAD)
+free = ["freecad>=1.0"]
+# diff: DXF 对比与验收 (ezdxf + 分析工具)
+diff = ["ezdxf>=1.4.0"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

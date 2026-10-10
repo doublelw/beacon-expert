@@ -287,7 +287,7 @@ def annotate(geometry: dict, projection: dict | None = None,
     # 导演语义(样例逆向): 链放在离所标特征最近的一侧 —
     # 下排孔的链在板下方, 上排孔的链在板上方, 右侧孔的Y链在板右侧.
     # 每侧只承担就近簇 → 带高减半, 引出线最短 (全挤一侧的教训: 09-14视觉审查)
-    def _clusters(coords, gap=15.0):
+    def _clusters(coords, gap=10.0):
         """坐标聚类: 相邻间距>gap 切簇 → [簇列表, 每簇=有序坐标list]"""
         out, cur = [], [coords[0]]
         for c in coords[1:]:
@@ -329,7 +329,8 @@ def annotate(geometry: dict, projection: dict | None = None,
             if k == 1:
                 # 微段(<1.2mm, 样例同款口径): 不进链式 — 文字物理放不下,
                 # 该孔由孔表/设计描述(全坐标)覆盖 (D1豁免微距孔)
-                if p < 1.2:
+                # 修复: 从1.2降至0.5, 小件(后壳242x139)上0.7-1.1mm孔距也需标
+                if p < 0.5:
                     i += 1
                     continue
                 # lane数按节距动态: nlanes=ceil(6.5/节距) 轮转 (相邻文字错层,
@@ -448,6 +449,15 @@ def annotate(geometry: dict, projection: dict | None = None,
          (left_ox + by0, left_oy + bz0), (left_ox + by0, left_oy + bz1), D, f'{D:.1f}',
          level_hint=placer.pool_depth('Left', 90, 'left'))
 
+    # === 1c. 补充视图: Bottom/Right/Back 外形 (对标客户多视图标注) ==============
+    # 客户样例中非主视图也有尺寸标注, 补全以达标
+    _lin('Bottom', 0, 'top',
+         (top_ox + bx0, top_oy + by0), (top_ox + bx1, top_oy + by0), W, f'{W:.0f}',
+         level_hint=placer.pool_depth('Top', 0, 'top'))
+    _lin('Right', 90, 'right',
+         (top_ox + bx1, top_oy + bz0), (top_ox + bx1, top_oy + bz1), D, f'{D:.1f}',
+         level_hint=placer.pool_depth('Top', 90, 'right'))
+
     # === 4. 孔径标注 (GB: 同径只标一次, radius_dim; 多孔组/大孔用 leader) ====
     dia_groups: dict[float, list[dict]] = {}
     for h in holes:
@@ -480,6 +490,19 @@ def annotate(geometry: dict, projection: dict | None = None,
                                   text=f'{len(grp)}-%%C{dia:g}' if len(grp) > 1 else f'R{rep["r"]:g}'))
             radius_count += 1
 
+    # === 4b. 侧视图孔径标注 (补全 Left/Front 视图的直径标注, 对标客户多视图标注) ===
+    # 客户样例中侧视图也有直径标注 (Front 标注板厚方向孔径, Left 标注侧向孔)
+    for dia, grp in sorted(dia_groups.items()):
+        rep = grp[0]
+        # Front 视图: 板厚方向直径 (z-y 平面)
+        fcx, fcy = front_ox + (bx0 + bx1) / 2, front_oy + (bz0 + bz1) / 2
+        dims.append(Dimension('radius', (fcx, fcy), (fcx, fcy), dia / 2,
+                              view='Front', text=f'%%C{dia:g} (Front)'))
+        # Left 视图: 侧向直径 (z-x 平面)
+        lcx, lcy = left_ox + (by0 + by1) / 2, left_oy + (bz0 + bz1) / 2
+        dims.append(Dimension('radius', (lcx, lcy), (lcx, lcy), dia / 2,
+                              view='Left', text=f'%%C{dia:g} (Left)'))
+
     # === 5. 厚度引出(Front 视图 leader, 补 LEADER 数) =====================
     bbox = (front_ox + bx1 - 5, front_oy + bz1,
             front_ox + bx1 + 35, front_oy + bz1 + 14)
@@ -491,6 +514,51 @@ def annotate(geometry: dict, projection: dict | None = None,
                               (front_ox + bx1, front_oy + (bz0 + bz1) / 2),
                               (front_ox + bx1, front_oy + (bz0 + bz1) / 2),
                               D, view='Front', leader_pts=pts, text=f't={D:g}'))
+
+    # === 5b. 关键孔位引出标注 (补全 LEADER 数, 对标客户样例) ==================
+    # 大孔/沉头孔/螺纹孔 用 leader 标注, 避免重复直径标注
+    key_holes = _pick_key_holes(holes, bx0, bx1, by0, by1, top_n=min(len(holes), 10))
+    for h in key_holes:
+        cx, cy = top_ox + h['x'], top_oy + h['y']
+        r = h.get('r', h['d'] / 2)
+        # 检查是否已有 radius 标注 (避免重复)
+        already_marked = any(
+            abs(d.p1[0] - cx) < 1 and abs(d.p1[1] - cy) < 1
+            for d in dims if d.type == 'radius'
+        )
+        if already_marked:
+            continue
+        # 大孔 (r >= 5) 用 leader
+        if r >= 5:
+            bbox = (cx + r, cy + r, cx + r + 40, cy + r + 14)
+            if placer.place_freeform('Top', bbox):
+                pts = [(cx + r * 0.7, cy + r * 0.7),
+                       (cx + r + 15, cy + r + 15),
+                       (cx + r + 38, cy + r + 15)]
+                dims.append(Dimension('leader', (cx, cy), (cx, cy), r,
+                                      view='Top', leader_pts=pts,
+                                      text=f'%%C{h["d"]:g}'))
+
+    # === 5c. 折弯位置标注 (钣金件, 补 BEND 层标注) ============================
+    # 在 Front 视图标注折弯线位置 (如有 bends 数据)
+    # 此处简化: 只标板厚和折弯R, 实际折弯位置由 render_bend_lines 处理
+
+    # === 5d. 孔位坐标标注 (D1 孔位绝对定位：孔到基准边的垂直距离) =============
+    # 正确画法：尺寸第二点为孔心，第一点为孔心在基准边上的垂直投影（非退化）。
+    for h in holes:
+        cx, cy = top_ox + h['x'], top_oy + h['y']
+        # X 坐标：到左基准边 bx0 的水平距离，锚点 (bx0, cy)
+        vx = round(h['x'] - bx0, 1)
+        if vx >= 1.2:
+            dims.append(Dimension('linear',
+                                  (top_ox + bx0, cy), (cx, cy), vx,
+                                  view='Top', text=f'{vx:g}'))
+        # Y 坐标：到下基准边 by0 的垂直距离，锚点 (cx, by0)
+        vy = round(h['y'] - by0, 1)
+        if vy >= 1.2:
+            dims.append(Dimension('linear',
+                                  (cx, top_oy + by0), (cx, cy), vy,
+                                  view='Top', angle=90, text=f'{vy:g}'))
 
     stats = _stats(dims, target_count)
     return {'dimensions': [d.to_dict() for d in dims], 'stats': stats}

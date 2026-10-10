@@ -8,7 +8,7 @@ import os
 import shutil
 import uuid
 
-from src.config import FC_BIN, TASKS_DIR
+from config import FC_BIN, TASKS_DIR
 
 
 async def run_freecad(script_path: str, env_extras: dict = None, timeout: int = 600) -> dict:

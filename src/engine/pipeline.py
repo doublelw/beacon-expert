@@ -12,8 +12,8 @@ import sys
 import uuid
 from pathlib import Path
 
-from src.config import TASKS_DIR, SAAS_CORE
-from src.engine.freecad_adapter import run_freecad
+from config import TASKS_DIR, SAAS_CORE
+from engine.freecad_adapter import run_freecad
 
 # 单机并发上限 (FreeCAD 重量级, 2-4 合理)
 _semaphore = asyncio.Semaphore(2)
