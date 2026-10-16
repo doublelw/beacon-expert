@@ -16,8 +16,14 @@ engine = create_engine(
 @event.listens_for(engine, "connect")
 def _set_sqlite_pragma(dbapi_conn, conn_record):
     cursor = dbapi_conn.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL")
-    cursor.execute("PRAGMA busy_timeout=5000")
+    try:
+        cursor.execute("PRAGMA journal_mode=WAL")
+    except Exception:
+        pass  # WAL may not be supported on all SQLite builds
+    try:
+        cursor.execute("PRAGMA busy_timeout=5000")
+    except Exception:
+        pass
     cursor.close()
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
