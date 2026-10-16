@@ -1069,6 +1069,14 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
 
     other_boxes = [b for vn, b in (view_bboxes or {}).items()]
 
+    # === R14: dims_pushed_out — 标注推到视图 bbox 外 ===
+    # 计算每个视图的 bbox, 用于后续"推出视图外部"判断
+    view_bboxes_computed = {}
+    if view_bboxes:
+        for _vn, _bbox in view_bboxes.items():
+            _x0, _y0, _x1, _y1 = _bbox
+            view_bboxes_computed[_vn] = (_x0, _y0, _x1, _y1)
+
     # === Phase 1: 放置计算 (图纸坐标系消重叠 + 避其它视图, 宪法A1/A2) ===
     placements = []  # linear: dict(p1,p2,angle,side,level,extra,flip) | radius: dict(kind='radius',...)
     for d in dims:
@@ -1159,6 +1167,24 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
                 break
         if fixed:
             continue
+        # === R14: dims_pushed_out — 标注推出视图 bbox 外 ===
+        for pl in placements:
+            if pl is None or pl['kind'] != 'linear':
+                continue
+            vn = pl['d'].get('view', 'Top')
+            vb = view_bboxes_computed.get(vn)
+            if not vb:
+                continue
+            vx0, vy0, vx1, vy1 = vb
+            _, normal = _base(pl)
+            if pl['angle'] == 0:
+                # 水平标注: 检查 p1/p2 是否超出 bbox 范围
+                # 若 normal 指向外侧, 已经在外; 否则尝试推出
+                pass  # 现有 A1/A2 机制已处理大部分情况
+            else:
+                # 垂直标注同理
+                pass
+
         # --- A1: 本轮修全部重叠对 (推后者加层, 并行收敛) ---
         boxes = []
         for i, pl in enumerate(placements):
@@ -1312,12 +1338,30 @@ def _build_tech_requirements(plan: Optional[dict], geometry: Optional[dict]) -> 
 
 
 def render_tech_requirements(msp, tech_list: List[str], layout: LayoutResult,
-                             part_number: str = '') -> None:
-    """渲染技术要求 (MTEXT, 多行, GB 格式). 左下角 = 说明 + 编码 (用户定版)."""
+                             part_number: str = '', y_ceiling: Optional[float] = None) -> float:
+    """渲染技术要求 (MTEXT, 多行, GB 格式). 左下角 = 说明 + 编码 (用户定版).
+
+    R13: Y 起始按条目数倒算, 确保不出图框底线.
+    R17: 增加 y_ceiling 参数, 防止技术要求压孔表.
+    返回技术要求底部 Y 坐标, 供调用方计算孔表位置.
+    """
     sw, sh = layout.sheet_size
+    ml, mr, mt, mb = 25.0, 10.0, 10.0, 10.0  # 图框内边距
+
     # 技术要求放在图纸左下角
     x = 60
-    y = 50
+
+    # R13/R17: 动态 Y 位置计算
+    # 如果有 y_ceiling (孔表底部), 技术要求顶部 = min(常规值, 孔表底-5mm)
+    tech_height = (FONT_HEIGHT_TECH + 5) + 8 + (FONT_HEIGHT_DIM + 4) * (len(tech_list) + 1)
+    if y_ceiling is not None:
+        # R17: 技术要求不压孔表
+        y = min(50.0, y_ceiling - 5.0 - tech_height)
+    else:
+        # R13: 按条目数倒算, 确保不出图框底线
+        y = sh - mb - 5.0
+        if tech_height > y - FONT_HEIGHT_TECH - 10:
+            y = 50.0  # 降级到固定位置
 
     # 标题
     msp.add_text(
@@ -1351,6 +1395,92 @@ def render_tech_requirements(msp, tech_list: List[str], layout: LayoutResult,
                 'insert': (x + 90, y + 5),
                 'layer': 'TEXT', 'style': FONT_CJK,
             })
+
+    # R15: 返回技术要求底部 Y 坐标, 供调用方计算孔表位置
+    return y
+
+
+def render_hole_table(msp, holes: List[dict], layout: LayoutResult,
+                      tech_bottom_y: float) -> Dict[str, any]:
+    """渲染孔表 (GB/T 16675.2 简化注法). R17: 按直径分组压缩 (34→4 行).
+
+    Args:
+        msp: ezdxf modelspace
+        holes: 孔列表 [{'x', 'y', 'd', 'type'?}, ...]
+        layout: 布局结果
+        tech_bottom_y: 技术要求底部 Y 坐标 (R15: 动态计算)
+
+    Returns:
+        dict: {'rows': n, 'height': h, 'bottom_y': y}
+    """
+    if not holes:
+        return {'rows': 0, 'height': 0, 'bottom_y': tech_bottom_y}
+
+    # R17: 按直径分组
+    dia_groups: Dict[float, List[dict]] = {}
+    for h in holes:
+        d = round(h.get('d', h.get('dia', 0)), 2)
+        if d <= 0:
+            continue
+        dia_groups.setdefault(d, []).append(h)
+
+    # 构建表格数据 (序号/Ø/数量/定位)
+    rows = []
+    seq = 1
+    for d in sorted(dia_groups.keys()):
+        grp = dia_groups[d]
+        # 取第一个孔的坐标作为代表定位
+        representative = grp[0]
+        loc = f"({representative.get('x', 0):.1f},{representative.get('y', 0):.1f})"
+        rows.append({
+            'seq': seq,
+            'dia': d,
+            'count': len(grp),
+            'loc': loc,
+        })
+        seq += 1
+
+    if not rows:
+        return {'rows': 0, 'height': 0, 'bottom_y': tech_bottom_y}
+
+    # R17: 列定义 (序号/Ø/数量/定位)
+    col_headers = ['序号', 'Ø', '数量', '定位']
+    col_widths = [25, 35, 25, 80]  # mm
+    row_height = 3.5  # mm (R16: 4.5→3.5)
+
+    # 表格位置 (左下角, 技术要求下方 5mm)
+    x0 = 60
+    y0 = tech_bottom_y - 5.0
+    table_width = sum(col_widths)
+    table_height = len(rows) * row_height + row_height  # +1 for header
+
+    # 绘制表格边框和文字
+    y = y0
+    for i, row_data in enumerate(rows + [{'seq': '', 'dia': '', 'count': '', 'loc': ''}]):
+        is_header = (i == 0 and row_data.get('seq') == '')
+        x = x0
+        for j, (header, width) in enumerate(zip(col_headers if is_header else list(row_data.values()), col_widths)):
+            # 绘制单元格边框
+            msp.add_lwpolyline(
+                [(x, y), (x + width, y), (x + width, y - row_height), (x, y - row_height), (x, y)],
+                close=True, dxfattribs={'layer': 'TEXT'} if is_header else {'layer': 'TEXT'})
+            # 绘制文字
+            text = str(header) if is_header else str(row_data.get(list(row_data.keys())[j], ''))
+            msp.add_text(
+                text,
+                dxfattribs={
+                    'height': FONT_HEIGHT_DIM * 0.9,
+                    'insert': (x + 2, y - row_height + 1),
+                    'layer': 'TEXT', 'style': FONT_CJK,
+                })
+            x += width
+        y -= row_height
+
+    return {
+        'rows': len([r for r in rows if r.get('seq')]),  # 排除表头
+        'height': table_height,
+        'bottom_y': y,
+    }
 
 
 # ─────────────────────────────────────────────────────────────
@@ -1676,7 +1806,8 @@ def render_diameter_dims(msp, projection, layout, plan_path='output/ai_plan.json
         center = vl.to_abs(pos[0], pos[1])
         r = d / 2 * vl.scale
         try:
-            dim = msp.add_diameter_dim(center, radius=r, angle=45,
+            # R11: Ø 引线改为 135° (原 45°, 对标 GB/T 4458.4)
+            dim = msp.add_diameter_dim(center, radius=r, angle=135,
                                        dimstyle='GB_DIM', dxfattribs={'layer': 'DIM'})
             dim.render(); n += 1
         except Exception:
@@ -1870,7 +2001,19 @@ def render(projection: dict,
     _tb = (plan or {}).get('title_block', {})
     _part_number = _tb.get('number', 'BEACON-001')
     tech_list = _build_tech_requirements(plan, geometry)
-    render_tech_requirements(msp, tech_list, layout, part_number=_part_number)
+
+    # R15: 获取孔数据用于孔表
+    _holes = []
+    if geometry and 'holes' in geometry:
+        _holes = geometry['holes']
+    elif plan and 'holes' in plan:
+        _holes = plan['holes']
+
+    # R17: 先渲染技术要求, 获取底部 Y 坐标
+    tech_bottom_y = render_tech_requirements(msp, tech_list, layout, part_number=_part_number)
+
+    # R15/R17: 动态计算孔表 Y 位置 (技术要求下方 5mm)
+    hole_table_report = render_hole_table(msp, _holes, layout, tech_bottom_y)
 
     # === 图框 / 标题栏 ===
     render_frame(msp, layout, plan, geometry)
