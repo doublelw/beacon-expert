@@ -1339,82 +1339,63 @@ def _build_tech_requirements(plan: Optional[dict], geometry: Optional[dict]) -> 
 
 def render_tech_requirements(msp, tech_list: List[str], layout: LayoutResult,
                              part_number: str = '', y_ceiling: Optional[float] = None) -> float:
-    """渲染技术要求 (MTEXT, 多行, GB 格式). 左下角 = 说明 + 编码 (用户定版).
+    """渲染技术要求 (每行独立 TEXT, GB 格式). 左下角固定区域.
 
-    R13: Y 起始按条目数倒算, 确保不出图框底线.
-    R17: 增加 y_ceiling 参数, 防止技术要求压孔表.
+    R13: Y 起始固定在 y=111, 确保与技术区一致.
+    R18: 改为逐行 TEXT 而非 MTEXT, 与 round17 样例一致.
     返回技术要求底部 Y 坐标, 供调用方计算孔表位置.
     """
     sw, sh = layout.sheet_size
     ml, mr, mt, mb = 25.0, 10.0, 10.0, 10.0  # 图框内边距
 
-    # 技术要求放在图纸左下角
-    x = 60
-
-    # R13/R17: 动态 Y 位置计算
-    # 如果有 y_ceiling (孔表底部), 技术要求顶部 = min(常规值, 孔表底-5mm)
-    tech_height = (FONT_HEIGHT_TECH + 5) + 8 + (FONT_HEIGHT_DIM + 4) * (len(tech_list) + 1)
-    if y_ceiling is not None:
-        # R17: 技术要求不压孔表
-        y = min(50.0, y_ceiling - 5.0 - tech_height)
-    else:
-        # R13: 按条目数倒算, 确保不出图框底线
-        y = sh - mb - 5.0
-        if tech_height > y - FONT_HEIGHT_TECH - 10:
-            y = 50.0  # 降级到固定位置
+    # 技术要求固定在左下角 (对标 round17: 从 y=111 开始)
+    x = 60.0
+    y = 111.0
 
     # 标题
     msp.add_text(
         '技术要求',
         dxfattribs={
             'height': FONT_HEIGHT_TECH,
-            'insert': (x, y + 5),
+            'insert': (x, y),
             'layer': 'TECH', 'style': FONT_CJK,
         })
-    y -= 8
+    y -= (FONT_HEIGHT_TECH + 5)
 
-    # 条目 (MTEXT 多行)
-    if tech_list:
-        content = '\\P'.join(tech_list)  # \\P = ezdxf MTEXT 换行
-        msp.add_mtext(
-            content,
-            dxfattribs={
-                'layer': 'TECH',
-                'insert': (x, y),
-                'char_height': FONT_HEIGHT_DIM,
-                'style': FONT_CJK,
-            })
-        y -= (FONT_HEIGHT_DIM + 4) * (len(tech_list) + 1)
-
-    # 编码 (左下角 = 说明 + 编码, 用户定版; 与「技术要求」标题同行, 不出图框)
-    if part_number:
+    # 逐行 TEXT (与 round17 一致: 每条独立 TEXT 实体)
+    for item in tech_list:
         msp.add_text(
-            f'编码: {part_number}',
+            item,
             dxfattribs={
-                'height': FONT_HEIGHT_TEXT,
-                'insert': (x + 90, y + 5),
-                'layer': 'TEXT', 'style': FONT_CJK,
+                'height': FONT_HEIGHT_DIM,
+                'insert': (x, y),
+                'layer': 'TECH', 'style': FONT_CJK,
             })
+        y -= (FONT_HEIGHT_DIM + 5)
 
-    # R15: 返回技术要求底部 Y 坐标, 供调用方计算孔表位置
+    # 编码 (右下角标题栏区域内, 不从图处单独写)
+    # part_number 已写入 render_frame 标题栏
+
+    # R15/R18: 返回技术要求底部 Y 坐标, 供调用方计算孔表位置
     return y
 
 
 def render_hole_table(msp, holes: List[dict], layout: LayoutResult,
-                      tech_bottom_y: float) -> Dict[str, any]:
+                      tech_bottom_y: Optional[float] = None) -> Dict[str, any]:
     """渲染孔表 (GB/T 16675.2 简化注法). R17: 按直径分组压缩 (34→4 行).
+    R18: 孔表固定在左下角区域 (y=220), 不依赖技术要求位置.
 
     Args:
         msp: ezdxf modelspace
         holes: 孔列表 [{'x', 'y', 'd', 'type'?}, ...]
         layout: 布局结果
-        tech_bottom_y: 技术要求底部 Y 坐标 (R15: 动态计算)
+        tech_bottom_y: 技术要求底部 Y (保留参数兼容性, 实际不使用)
 
     Returns:
         dict: {'rows': n, 'height': h, 'bottom_y': y}
     """
     if not holes:
-        return {'rows': 0, 'height': 0, 'bottom_y': tech_bottom_y}
+        return {'rows': 0, 'height': 0, 'bottom_y': 220.0}
 
     # R17: 按直径分组
     dia_groups: Dict[float, List[dict]] = {}
@@ -1441,33 +1422,32 @@ def render_hole_table(msp, holes: List[dict], layout: LayoutResult,
         seq += 1
 
     if not rows:
-        return {'rows': 0, 'height': 0, 'bottom_y': tech_bottom_y}
+        return {'rows': 0, 'height': 0, 'bottom_y': 220.0}
 
-    # R17: 列定义 (序号/Ø/数量/定位)
-    col_headers = ['序号', 'Ø', '数量', '定位']
+    # R17/R18: 列定义 + 固定位置 (对标 round17: y=222-242)
+    col_headers = ['序号', '规格', '数量', '定位']
     col_widths = [25, 35, 25, 80]  # mm
-    row_height = 3.5  # mm (R16: 4.5→3.5)
+    row_height = 3.5  # mm
 
-    # 表格位置 (左下角, 技术要求下方 5mm)
-    x0 = 60
-    y0 = tech_bottom_y - 5.0
+    # 表格位置 (固定左下角区域, 与技术要求不重叠)
+    x0 = 60.0
+    y0 = 242.0  # R18: 固定 Y, 对标 round17 y=242 表头
     table_width = sum(col_widths)
-    table_height = len(rows) * row_height + row_height  # +1 for header
+    table_height = (len(rows) + 1) * row_height  # +1 for header
 
     # 绘制表格边框和文字
     y = y0
     for i, row_data in enumerate(rows + [{'seq': '', 'dia': '', 'count': '', 'loc': ''}]):
-        is_header = (i == 0 and row_data.get('seq') == '')
+        is_header = (i == len(rows))  # 表头在最后一行(从下往上画)
         x = x0
-        for j, (header, width) in enumerate(zip(col_headers if is_header else list(row_data.values()), col_widths)):
+        for j, (header, width) in enumerate(zip(col_headers if is_header else [row_data['seq'], row_data['dia'], row_data['count'], row_data['loc']], col_widths)):
             # 绘制单元格边框
             msp.add_lwpolyline(
                 [(x, y), (x + width, y), (x + width, y - row_height), (x, y - row_height), (x, y)],
-                close=True, dxfattribs={'layer': 'TEXT'} if is_header else {'layer': 'TEXT'})
+                close=True, dxfattribs={'layer': 'TEXT'})
             # 绘制文字
-            text = str(header) if is_header else str(row_data.get(list(row_data.keys())[j], ''))
             msp.add_text(
-                text,
+                str(header),
                 dxfattribs={
                     'height': FONT_HEIGHT_DIM * 0.9,
                     'insert': (x + 2, y - row_height + 1),
@@ -1477,7 +1457,7 @@ def render_hole_table(msp, holes: List[dict], layout: LayoutResult,
         y -= row_height
 
     return {
-        'rows': len([r for r in rows if r.get('seq')]),  # 排除表头
+        'rows': len(rows),
         'height': table_height,
         'bottom_y': y,
     }
@@ -1594,6 +1574,26 @@ def render_frame(msp, layout: LayoutResult, plan: Optional[dict],
     _add_text('标记', x1 + 5, tb_y0 + 14, 3.0)
     _add_text('数量: 1PCS/套', x2 + 5, tb_y0 + 14, 3.0)
 
+    # === R18: 扩展标题栏 — 增加公司名/版本号/共几页/签名栏 (对标 round17 GB/T 10609.1) ===
+    # 从 plan 中提取额外信息
+    _meta = (plan or {}).get('_meta', {})
+    company = _meta.get('company', '贝肯检测技术有限公司')
+    version = _meta.get('version', 'A01')
+    page_num = _meta.get('page_num', 1)
+    page_total = _meta.get('page_total', 1)
+
+    # 公司名 (底部全宽)
+    _add_text(company, tb_x0 + 5, tb_y0 + 3, FONT_HEIGHT_SMALL, 'TITLE')
+    # 版本号
+    _add_text(f'版 本 {version}', tb_x0 + tb_w * 0.55, tb_y0 + 3, FONT_HEIGHT_SMALL, 'TITLE')
+    # 页码
+    _add_text(f'共{page_total}页 第{page_num}页', tb_x0 + tb_w - 60, tb_y0 + 3, FONT_HEIGHT_SMALL, 'TITLE')
+
+    # 签名栏 (标题栏下半区, 四栏: 设计/校对/审核/标准化)
+    sig_y = tb_y0 + tb_h * 0.52 + 2
+    _add_text('签字', x1 + 5, sig_y, 3.0, 'TITLE')
+    _add_text('签字', x2 + 5, sig_y, 3.0, 'TITLE')
+
 
 def render_fastener_bom(msp, layout, plan_path='output/ai_plan.json'):
     """紧固件明细栏 (AI识别结果直接体现, 对标样例 Y1:9-S-M3-1 + 明细栏).
@@ -1681,11 +1681,12 @@ def render_tolerance_table(msp, layout):
     return 1
 
 
-def render_bend_lines(msp, projection, layout, veritas_path='output/veritas.json'):
+def render_bend_lines(msp, projection, layout, veritas: Optional[dict] = None) -> int:
     """钣金折弯线标注 (成形Front视图, 对标样例折弯中心线)."""
-    if not os.path.exists(veritas_path):
+    # R-fix: 接收 veritas dict 而非硬编码文件路径
+    if not veritas:
         return 0
-    v = json.load(open(veritas_path))
+    v = veritas
     vl = layout.views.get('Front')
     if not vl:
         return 0
@@ -1695,14 +1696,17 @@ def render_bend_lines(msp, projection, layout, veritas_path='output/veritas.json
             continue
         ax = f['axis']; x, y, z = f['center']
         half = f.get('span', 50) / 2
+        # R-fix: 处理 Z轴折弯 (axis=[0,0,1]) → 水平折弯线 (沿X方向)
         if abs(ax[0]) > 0.5:        # X轴折弯 → 折弯线沿X(水平)
             p1 = vl.to_abs(x - half, y); p2 = vl.to_abs(x + half, y)
         elif abs(ax[1]) > 0.5:      # Y轴折弯 → 沿Y(竖直)
             p1 = vl.to_abs(x, y - half); p2 = vl.to_abs(x, y + half)
+        elif abs(ax[2]) > 0.5:      # Z轴折弯 → 折弯线沿X(水平, 板厚方向)
+            p1 = vl.to_abs(x - half, y); p2 = vl.to_abs(x + half, y)
         else:
             continue
-        msp.add_line(p1, p2, dxfattribs={'layer': 'CENTER'})   # 折弯中心线(点划线)
-        # 折弯标注: 角度+长度(span)+内圆角R (按drawing_requirements清单, 当前漏标的)
+        msp.add_line(p1, p2, dxfattribs={'layer': 'BEND'})   # 折弯中心线( dashed)
+        # 折弯标注: 角度+长度(span)+内圆角R
         _mx = (p1[0] + p2[0]) / 2; _my = (p1[1] + p2[1]) / 2
         _span = f.get('span', 0); _r = f.get('radius', 0)
         msp.add_text(f'90° L{_span:.0f} R{_r:.1f}', dxfattribs={
@@ -1913,7 +1917,7 @@ def render(projection: dict,
     render_tolerance_table(msp, layout)
 
     # === 钣金折弯线标注 (钣金特有, 对标样例) ===
-    bend_count = render_bend_lines(msp, projection, layout)
+    bend_count = render_bend_lines(msp, projection, layout, veritas=veritas)
 
     # === M5 内建遗留标注 (孔位/孔径/侧向) ===
     # annotation 在场时全部跳过: 与标注链语义重复(宪法D5), 且不在
@@ -2012,8 +2016,8 @@ def render(projection: dict,
     # R17: 先渲染技术要求, 获取底部 Y 坐标
     tech_bottom_y = render_tech_requirements(msp, tech_list, layout, part_number=_part_number)
 
-    # R15/R17: 动态计算孔表 Y 位置 (技术要求下方 5mm)
-    hole_table_report = render_hole_table(msp, _holes, layout, tech_bottom_y)
+    # R18: 孔表固定 Y 位置, tech_bottom_y 仅作兼容性传参
+    hole_table_report = render_hole_table(msp, _holes, layout)
 
     # === 图框 / 标题栏 ===
     render_frame(msp, layout, plan, geometry)
