@@ -29,6 +29,10 @@ def find_freecad() -> str | None:
 
     # 常见安装路径 (Windows)
     common_paths = [
+        # winget 用户安装路径
+        r'C:\Users\{}\AppData\Local\Programs\FreeCAD 1.1\bin\FreeCADCmd.exe'.format(os.environ.get('USERNAME', '')),
+        r'C:\Users\{}\AppData\Local\Programs\FreeCAD 1.1\bin\freecadcmd.exe'.format(os.environ.get('USERNAME', '')),
+        # 系统安装路径
         r'C:\Program Files\FreeCAD 0.21\bin\FreeCADCmd.exe',
         r'C:\Program Files\FreeCAD 0.21\bin\freecadcmd.exe',
         r'C:\Program Files (x86)\FreeCAD\bin\FreeCADCmd.exe',
