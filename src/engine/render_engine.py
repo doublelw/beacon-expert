@@ -583,7 +583,7 @@ def setup_chinese_font(doc: 'ezdxf.document.Drawing') -> None:
             pass
 
 
-def setup_dimstyle(doc: 'ezdxf.document.Drawing') -> None:
+def setup_dimstyle(doc: 'ezdxf.document.Drawing', scale: float = 1.0) -> None:
     """创建 GB 标注样式 (DIMSTYLE), 用 SimSun 字体.
 
     DIMENSION 的文字样式由 DIMSTYLE 控制 (非 dimension 本身).
@@ -591,6 +591,11 @@ def setup_dimstyle(doc: 'ezdxf.document.Drawing') -> None:
 
     关键修复: ezdxf 的 EZDXF 模板默认 dimlfac=100 (cm 显示), 导致标注文字
     被放大 100 倍 (例: 150mm 显示成 "15000")。GB 工程图必须 dimlfac=1.0 (mm).
+
+    关键修复2 (借鉴 huashu-cad drawing.py): 几何按图纸比例 scale 缩放绘制,
+    DIMENSION 用 <> 原生测量时读到的是图纸长度而非真实毫米 (实测后壳 1:2
+    图纸 242mm 显示成 121)。dimlfac=1/scale 使显示值 = 测量值/scale = 真实mm.
+    显式 text 覆盖的标注不受 dimlfac 影响, 两链路共存安全.
     """
     existing = [ds.dxf.name for ds in doc.dimstyles]
     if 'GB_DIM' in existing:
@@ -614,7 +619,7 @@ def setup_dimstyle(doc: 'ezdxf.document.Drawing') -> None:
         ds.dxf.dimclrt = 7                # 文字颜色 白
         ds.dxf.dimclrd = 2                # 尺寸线颜色 黄
         ds.dxf.dimclre = 2                # 延伸线颜色 黄
-        ds.dxf.dimlfac = 1.0              # 长度比例因子 = 1 (mm 显示, 不放大)
+        ds.dxf.dimlfac = 1.0 / scale     # 长度比例因子 = 1/图纸比例 (<> 原生测量显示真实 mm, 见 docstring)
         ds.dxf.dimtfac = 1.0              # 公差文字高度比例
         ds.dxf.dimlunit = 2               # 单位: 十进制
         ds.dxf.dimdec = 1                 # 小数位 1 (例: 150.0)
@@ -1899,7 +1904,7 @@ def render(projection: dict,
     doc = ezdxf.new('R2013', setup=True)
     setup_chinese_font(doc)
     setup_layers(doc)
-    setup_dimstyle(doc)
+    setup_dimstyle(doc, scale=layout.scale)
     msp = doc.modelspace()
 
     # === M3 几何 ===
