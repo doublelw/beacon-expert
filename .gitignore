@@ -5,3 +5,4 @@ data/*.db
 storage/tasks/
 output/
 .memsearch/
+.venv-cad/
