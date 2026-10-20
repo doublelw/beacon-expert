@@ -29,6 +29,11 @@ class GenerateRequest(BaseModel):
                         description="自然语言需求, 如: 画一张120×80安装底板,四角φ9孔距边15")
 
 
+class ModifyRequest(BaseModel):
+    instructions: str = Field(..., min_length=2, max_length=2000,
+                              description="修改指令, 如: 宽度改成150, 中央孔改φ32")
+
+
 @router.post("/generate")
 async def generate(
     req: GenerateRequest,
@@ -46,6 +51,56 @@ async def generate(
     db.commit()
     background_tasks.add_task(_run_generation, task_id)
     return {"task_id": task_id, "status": "queued"}
+
+
+@router.post("/modify/{task_id}")
+async def modify(task_id: str, req: ModifyRequest,
+                 background_tasks: BackgroundTasks,
+                 user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """基于已完成任务的 spec 改尺寸重出图 (新任务, 保留来源+前后对比)."""
+    src = db.query(Cad2dTask).filter(Cad2dTask.id == task_id).first()
+    if not src or src.user_id != user.id:
+        raise HTTPException(404, "来源任务不存在")
+    if src.status != "done" or not (Path(src.work_dir) / 'spec.json').exists():
+        raise HTTPException(400, f"来源任务无参数源 (status={src.status})")
+    new_id = uuid.uuid4().hex
+    work_dir = str(TASKS_DIR / new_id)
+    Path(work_dir).mkdir(parents=True, exist_ok=True)
+    db.add(Cad2dTask(id=new_id, user_id=user.id,
+                     prompt=f"[改图 {task_id[:8]}] {req.instructions}",
+                     status="queued", work_dir=work_dir, source_task_id=task_id))
+    db.commit()
+    background_tasks.add_task(_run_modify, new_id, src.work_dir, req.instructions)
+    return {"task_id": new_id, "source_task_id": task_id, "status": "queued"}
+
+
+def _run_modify(task_id: str, source_dir: str, instructions: str):
+    """后台改图: 参数源编辑→确定性重生成→前后对比."""
+    db = SessionLocal()
+    task = db.query(Cad2dTask).filter(Cad2dTask.id == task_id).first()
+    try:
+        task.status = "planning"
+        db.commit()
+        from src.engine.cad_modify import run_modify
+        r = asyncio.run(run_modify(source_dir, instructions, task.work_dir))
+        (Path(task.work_dir) / 'modify_report.json').write_text(
+            json.dumps(r, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
+        task.report_path = str(Path(task.work_dir) / 'modify_report.json')
+        task.dxf_path = r.get('dxf')
+        task.png_path = r.get('png')
+        if r.get('ok'):
+            task.status = "done"
+        else:
+            task.status = "failed"
+            task.error = f"[{r.get('stage') or 'modify'}] {str(r.get('error'))[:400]}"
+        task.updated_at = datetime.now(timezone.utc)
+        db.commit()
+    except Exception as ex:
+        task.status = "failed"
+        task.error = f"{type(ex).__name__}: {str(ex)[:400]}"
+        db.commit()
+    finally:
+        db.close()
 
 
 def _run_generation(task_id: str):
@@ -93,9 +148,11 @@ def _run_generation(task_id: str):
 def _serialize(t: Cad2dTask) -> dict:
     return {
         "task_id": t.id, "status": t.status, "prompt": t.prompt,
+        "source_task_id": t.source_task_id,
         "llm": {"provider": t.llm_provider, "model": t.llm_model,
                 "attempts": t.llm_attempts},
         "dxf": t.dxf_path, "png": t.png_path, "spec": t.spec_path,
+        "compare": str(Path(t.work_dir) / 'compare.png'),
         "error": t.error, "created_at": str(t.created_at),
     }
 
@@ -119,11 +176,13 @@ async def download(task_id: str, type: str = "dxf",
     t = db.query(Cad2dTask).filter(Cad2dTask.id == task_id).first()
     if not t or t.user_id != user.id:
         raise HTTPException(404, "任务不存在")
-    attr = {"dxf": t.dxf_path, "png": t.png_path,
-            "spec": t.spec_path, "report": t.report_path}.get(type)
+    attr = {"dxf": t.dxf_path, "png": t.png_path, "spec": t.spec_path,
+            "report": t.report_path,
+            "compare": str(Path(t.work_dir) / 'compare.png')}.get(type)
     if not attr or not Path(attr).exists():
         raise HTTPException(404, f"产物 {type} 不存在 (status={t.status})")
     media = {"dxf": "application/dxf", "png": "image/png",
-             "spec": "application/json", "report": "application/json"}[type]
+             "spec": "application/json", "report": "application/json",
+             "compare": "image/png"}[type]
     return FileResponse(attr, media_type=media,
                         filename=f"{task_id}.{type}")

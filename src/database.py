@@ -49,6 +49,9 @@ def _ensure_columns():
         ("drawings", "project_id", "INTEGER REFERENCES projects(id)"),
         ("conversations", "project_id", "INTEGER REFERENCES projects(id)"),
         ("conversion_tasks", "project_id", "INTEGER REFERENCES projects(id)"),
+        # 改图: 新任务记录来源任务
+        ("cad2d_tasks", "source_task_id", "TEXT"),
+        ("cad3d_tasks", "source_task_id", "TEXT"),
     ]
     with engine.begin() as conn:
         for table, col, typedef in additions:
@@ -233,6 +236,7 @@ class Cad2dTask(Base):
     status = Column(String(20), nullable=False, default="queued")
     # queued/planning/drawing/verifying/done/failed
     work_dir = Column(String(512), nullable=False)
+    source_task_id = Column(String(36), nullable=True)   # 改图来源任务
     spec_path = Column(String(512), nullable=True)
     dxf_path = Column(String(512), nullable=True)
     png_path = Column(String(512), nullable=True)
@@ -240,6 +244,31 @@ class Cad2dTask(Base):
     llm_provider = Column(String(30), nullable=True)
     llm_model = Column(String(60), nullable=True)
     llm_attempts = Column(Integer, default=0)       # 规划轮数 (含修复)
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+
+class Cad3dTask(Base):
+    """B线 Phase 3: 自然语言→build123d→STEP→3D→2D管线 任务."""
+    __tablename__ = "cad3d_tasks"
+    id = Column(String(36), primary_key=True)  # UUID
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    prompt = Column(Text, nullable=False)           # 用户自然语言需求
+    status = Column(String(20), nullable=False, default="queued")
+    # queued/planning/building/verifying/projecting/rendering/done/failed
+    work_dir = Column(String(512), nullable=False)
+    source_task_id = Column(String(36), nullable=True)   # 改图来源任务
+    step_path = Column(String(512), nullable=True)
+    params_path = Column(String(512), nullable=True)
+    dxf_path = Column(String(512), nullable=True)
+    png_path = Column(String(512), nullable=True)
+    compare_path = Column(String(512), nullable=True)    # 改图前后对比图
+    report_path = Column(String(512), nullable=True)
+    llm_provider = Column(String(30), nullable=True)
+    llm_model = Column(String(60), nullable=True)
+    llm_attempts = Column(Integer, default=0)
     error = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
