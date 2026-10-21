@@ -50,7 +50,7 @@ async def root():
 
 
 # === 路由注册 ===
-from src.routes import users, knowledge, settings, drawings, memory, convert, chat, projects, cad2d, cad3d
+from src.routes import users, knowledge, settings, drawings, memory, convert, chat, projects, cad2d, cad3d, dxfmod
 app.include_router(users.router)
 app.include_router(knowledge.router)
 app.include_router(settings.router)
@@ -61,6 +61,7 @@ app.include_router(chat.router)
 app.include_router(projects.router)
 app.include_router(cad2d.router)
 app.include_router(cad3d.router)
+app.include_router(dxfmod.router)
 
 
 @app.get("/app")

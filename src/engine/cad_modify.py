@@ -251,3 +251,47 @@ async def run_modify(source_task_dir: str, instructions: str, out_dir: str) -> d
             'dxf': r.get('dxf'), 'png': r.get('png'), 'compare_png': cmp_png,
             'params': r.get('params'), 'out_dir': str(wd),
             'error': r.get('error')}
+
+
+async def run_dxf_modify(dxf_path: str, instructions: str, out_dir: str) -> dict:
+    """任意来源 DXF + 修改指令 → 新图纸 (STRETCH编辑 + 作用域审计 + 证据图).
+
+    与 run_modify 的区别: 无参数源, 编辑直接作用于 DXF 实体 (LLM 只翻译
+    成窗口操作); 作用域外对象逐实体审计保全。
+    """
+    wd = Path(out_dir)
+    wd.mkdir(parents=True, exist_ok=True)
+    src = Path(dxf_path)
+    local = wd / f'source{src.suffix}'
+    local.write_bytes(src.read_bytes())          # 只在副本上改
+    (wd / 'modify_instructions.txt').write_text(instructions, encoding='utf-8')
+
+    from src.engine.dxf_edit_plan import plan_dxf_edit
+    plan, meta = await plan_dxf_edit(str(local), instructions)
+    if plan is None:
+        return {'ok': False, 'stage': 'plan', 'error': '; '.join(meta['errors'][:5])}
+    (wd / 'edit_plan.json').write_text(
+        json.dumps(plan, ensure_ascii=False, indent=1), encoding='utf-8')
+
+    from src.engine.dxf_edit import apply_edits
+    out_dxf = str(wd / 'drawing_modified.dxf')
+    r = apply_edits(str(local), plan['ops'], out_dxf)
+    audit = r['audit']
+    cmp_png = str(wd / 'compare.png')
+    try:
+        side_by_side_png(str(local), out_dxf, cmp_png, '修改前', '修改后')
+    except Exception:
+        cmp_png = None
+    ok = bool(audit['ok']) and bool(r['touched_total'] or not plan['ops'])
+    return {'ok': ok, 'kind': 'dxf', 'note': plan.get('note', ''),
+            'ops': [{'op': o['op'], 'window': o.get('window'),
+                     'touched': len(o['touched'])} for o in r['ops']],
+            'touched': r['touched_total'],
+            'audit': {'changed': len(audit['changed']),
+                      'removed': len(audit['removed']),
+                      'added': len(audit['added']),
+                      'unchanged': audit['unchanged'],
+                      'total_before': audit['total_before'], 'ok': audit['ok']},
+            'dxf': out_dxf, 'compare_png': cmp_png if ok else None,
+            'llm_attempts': meta['attempts'], 'out_dir': str(wd),
+            'error': None if ok else '作用域审计未通过或无实体被修改'}
