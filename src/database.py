@@ -295,3 +295,23 @@ class Cad3dTask(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
                         onupdate=lambda: datetime.now(timezone.utc))
+
+
+class CadAssemblyTask(Base):
+    """B线 Phase 5: 客户装配体STEP → 交互爆炸图 + 装配工程图 任务."""
+    __tablename__ = "cad_assembly_tasks"
+    id = Column(String(36), primary_key=True)  # UUID
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    prompt = Column(Text, nullable=False)            # 客户 STEP 路径或装配名
+    status = Column(String(20), nullable=False, default="queued")
+    # queued/tearing/exploding/rendering/done/failed
+    work_dir = Column(String(512), nullable=False)
+    step_path = Column(String(512), nullable=True)   # 源 STEP (客户上传或 venv 生成)
+    assembly_json = Column(String(512), nullable=True)
+    exploded_html = Column(String(512), nullable=True)   # 交互爆炸图网页
+    assembly_dxf_path = Column(String(512), nullable=True)  # 装配工程图 (可选, 花叔 drawing.py)
+    n_parts = Column(Integer, default=0)
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
