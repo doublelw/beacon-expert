@@ -12,6 +12,7 @@ TASKS_DIR = STORAGE_DIR / "tasks"
 FIXTURES_DIR = BASE_DIR / "tests" / "fixtures"
 FONT_DIR = BASE_DIR / "fonts"
 CONFIG_FILE = DATA_DIR / "config.json"
+VENDOR_HUASHU = BASE_DIR / "vendor" / "huashu-cad"   # 花叔 skill (MIT, 见 VENDORED.md)
 
 # === 数据库 ===
 DB_PATH = DATA_DIR / "beacon.db"
