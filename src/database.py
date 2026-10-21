@@ -210,6 +210,28 @@ class MemoryEntry(Base):
 
 # === AI会话系统 (Phase 4) ===
 
+class Gen2dTask(Base):
+    """M-gen: 自然语言→2D工程图DXF 生成任务."""
+    __tablename__ = "gen2d_tasks"
+    id = Column(String(36), primary_key=True)  # UUID
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    prompt = Column(Text, nullable=False)           # 用户自然语言需求
+    status = Column(String(20), nullable=False, default="queued")
+    # queued/planning/drawing/verifying/done/failed
+    work_dir = Column(String(512), nullable=False)
+    spec_path = Column(String(512), nullable=True)
+    dxf_path = Column(String(512), nullable=True)
+    png_path = Column(String(512), nullable=True)
+    report_path = Column(String(512), nullable=True)
+    llm_provider = Column(String(30), nullable=True)
+    llm_model = Column(String(60), nullable=True)
+    llm_attempts = Column(Integer, default=0)       # 规划轮数 (含修复)
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+
 class Conversation(Base):
     __tablename__ = "conversations"
     id = Column(String(36), primary_key=True)  # UUID
