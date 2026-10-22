@@ -170,6 +170,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 <div class="tree-item" onclick="showPage('knowledge','知识库')"><span class="tree-icon">📚</span> 知识库</div>
 <div class="tree-item" onclick="showPage('drawings','图纸库')"><span class="tree-icon">📊</span> 图纸库</div>
 <div class="tree-item" onclick="showPage('components','零部件库')"><span class="tree-icon">⚙</span> 零部件库</div>
+<div class="tree-item" onclick="showPage('assembly','装配工具')"><span class="tree-icon">🔩</span> 装配工具</div>
 <div class="sidebar-section">系统</div>
 <div class="tree-item" onclick="showPage('settings','模型配置')"><span class="tree-icon">🔧</span> 模型配置</div>
 <div class="tree-item" onclick="showPage('memory','AI记忆')"><span class="tree-icon">🧠</span> AI记忆</div>
@@ -284,6 +285,7 @@ function showPage(view,title){
   else if(view==='knowledge')loadKn(body);
   else if(view==='drawings')loadDr(body);
   else if(view==='components')loadCp(body);
+  else if(view==='assembly')loadAssembly(body);
   else if(view==='settings')loadSet(body);
   else if(view==='memory')loadMem(body);
 }
@@ -369,6 +371,77 @@ async function loadDr(b){
   }catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>'}
 }
 async function loadCp(b){b.innerHTML='<div class="card"><div class="card-title">零部件库</div><div class="card-body">标准件(压铆BSO/沉头M4/过孔) + 自定义件</div></div>'}
+// === 装配工具: 客户装配体STEP → 交互爆炸图 + 装配工程图 ===
+let asmPoll=null,asmCur=null;
+async function loadAssembly(b){
+  b.innerHTML=`
+  <div class="card"><div class="card-title">🔩 装配体爆炸图 + 工程图</div>
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <input type="file" id="asm-file" accept=".stp,.step" style="font-size:13px">
+        <button class="act-btn blue" onclick="asmUpload()" style="padding:8px 18px">生成爆炸图 + 工程图</button>
+        <span id="asm-status" style="font-size:13px;color:var(--text3)">未开始</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6">
+        上传客户装配体 STEP（多子件）→ 自动拆件 → <b>交互爆炸图</b>（爆炸滑杆/剖切/零件标签/BOM高亮，单文件双击即开）
+        ＋ <b>装配工程图</b>（GB全剖主视图+俯视图，齿轮简化画法）。回转类主轴=Z 装配体出工程图；非回转类自动降级为仅爆炸图。
+      </div>
+    </div>
+  </div>
+  <div id="asm-result"></div>`;
+  if(asmCur)renderAsmResult(asmCur);
+}
+async function asmUpload(){
+  const f=document.getElementById('asm-file').files[0];
+  const st=document.getElementById('asm-status');
+  if(!f){st.textContent='请选择 .stp/.step 文件';return}
+  st.textContent='上传中…';
+  const fd=new FormData();fd.append('file',f);
+  try{
+    const d=await api('/api/assembly/upload',{method:'POST',body:fd});
+    asmCur=d.task_id;st.textContent='处理中（拆件+渲染）…';
+    asmPollResult();
+  }catch(ex){st.textContent='✗ '+ex.message}
+}
+function asmPollResult(){
+  if(asmPoll)clearInterval(asmPoll);
+  asmPoll=setInterval(async()=>{
+    try{
+      const d=await api('/api/assembly/status/'+asmCur);
+      if(d.status==='done'||d.status==='failed'){
+        clearInterval(asmPoll);asmPoll=null;
+        renderAsmResult(d);
+      }else{
+        document.getElementById('asm-status').textContent='处理中…（'+(d.status||'排队')+'，'+d.n_parts+'件）';
+      }
+    }catch(ex){clearInterval(asmPoll);asmPoll=null;document.getElementById('asm-status').textContent='✗ '+ex.message}
+  },2000);
+}
+function renderAsmResult(d){
+  const st=document.getElementById('asm-status');st.textContent=d.status==='done'?'✓ 完成':'✗ 失败: '+(d.error||d.status);
+  st.style.color=d.status==='done'?'var(--green)':'var(--red)';
+  const box=document.getElementById('asm-result');if(!box)return;
+  if(d.status!=='done'){box.innerHTML='';return}
+  const dl=(t,name)=>API+'/api/assembly/download/'+d.task_id+'?type='+t+'&token='+TOKEN;
+  box.innerHTML=`
+  <div class="card"><div class="card-title">🧨 交互爆炸图（拖滑杆爆炸 · 剖切 · BOM高亮）</div>
+    <div class="card-body">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <a class="act-btn blue" style="padding:8px 16px;text-decoration:none" href="${dl('exploded_html','爆炸图.html')}" target="_blank">🖼 打开交互爆炸图（新窗口）</a>
+        <a class="act-btn" style="padding:8px 16px;text-decoration:none" href="${dl('assembly_json','assembly.json')}" target="_blank">📄 assembly.json</a>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">爆炸图是单文件 HTML（含 three.js 渲染引擎），新窗口打开后可拖滑杆爆炸、剖切、切视角，BOM 悬停高亮对应零件。</div>
+    </div></div>
+  <div class="card"><div class="card-title">📐 装配工程图（GB全剖 · 齿轮简化画法）</div>
+    <div class="card-body" style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+      ${d.assembly_dxf_png?`<img src="${dl('assembly_dxf_png','preview.png')}" style="max-width:420px;border:1px solid var(--border);border-radius:6px" alt="装配工程图">`:
+        '<div style="font-size:12px;color:var(--text3);padding:20px">非回转类装配体（主轴≠Z），工程图已降级为仅爆炸图。</div>'}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${d.assembly_dxf?`<a class="act-btn" style="padding:8px 16px;text-decoration:none" href="${dl('assembly_dxf','装配工程图.dxf')}" target="_blank">⬇ 下载装配工程图 DXF</a>`:''}
+        <a class="act-btn" style="padding:8px 16px;text-decoration:none" href="${dl('step','source.step')}" target="_blank">⬇ 源装配体 STEP</a>
+      </div>
+    </div></div>`;
+}
 async function loadSet(b){
   let d;
   try{d=await api('/api/settings/llm')}catch(ex){b.innerHTML='<div class="card">'+ex.message+'</div>';return}
