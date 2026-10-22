@@ -1,9 +1,14 @@
-"""M-explode: 客户 STEP 装配体 → 花叔 assembly.json → 交互爆炸图 HTML.
+"""M-explode: 客户 STEP 装配体 → 花叔 assembly.json → 交互爆炸图 HTML + 装配工程图.
 
 链路 (无自然语言, 确定性):
   import_step(客户STEP) 拆子件 → 逐件 tessellate (同 mech.py 参数)
   → 主轴自动判定 + 分层爆炸向量 (越靠里飞得越远, mechanical.md 纪律)
   → assembly.json (viewer 契约) → vendor viewer.py 直连出单文件 HTML
+  → vendor drawing.py 出装配工程图 DXF (回转类, 全剖主视图+俯视图+明细栏)
+
+两条腿:
+  爆炸图: assembly.json + 交互HTML (双击即开, 不联网)
+  装配工程图: assembly.json + 装配DXF (GB全剖, 仅适用回转类主轴=Z装配体)
 
 环境: build123d/OCP 只支持 Python ≤3.13, 主环境 3.14 → 本模块顶层不 import
 build123d; 路由在 .venv-cad 侧运行 (tools/install_cad_env.py 安装), 或直接
@@ -20,6 +25,7 @@ from typing import Optional
 from src.config import VENDOR_HUASHU
 
 VIEWER = VENDOR_HUASHU / "scripts" / "mech" / "viewer.py"
+DRAWING = VENDOR_HUASHU / "scripts" / "mech" / "drawing.py"
 
 # 密度表与花叔 mech.MATERIALS 一致 (材质默认 steel, 客户装配体无材质信息时按钢估)
 DENSITY_GMM3 = 7.85e-3
@@ -228,19 +234,58 @@ def _build_in_venv(venv_py: Path, step_path: str, out_dir: str,
     rep = out_dir_p / 'venv_build.json'
     if rep.exists():
         body = json.loads(rep.read_text(encoding='utf-8'))
+        # 装配体判定: 把 stage/error 传回主环境
         if body.get('stage') == 'input':
-            # 装配体判定: 把判定结果传回主环境 (主环境收不到 manifest 但拿到 stage/error)
             body['ok'] = False
             body['error'] = body.get('error', '')
             return body
         body['ok'] = r.returncode == 0 and body.get('ok', False)
         if not body['ok']:
             body['error'] = (r.stderr or r.stdout)[-400:]
+        # manifest 由 driver 一并落盘 → 主环境能拿到 main_axis 做装配工程图降级判定
         return body
     return {'ok': False, 'stage': 'build', 'error': (r.stderr or r.stdout)[-400:]}
 
 
 def run_explode(step_path: str, out_dir: str, title: str = None,
                 explode_scale: float = 0.8) -> dict:
-    """路由/CLI 统一入口."""
-    return build_assembly_json(step_path, out_dir, title, explode_scale)
+    """路由/CLI 统一入口: 客户STEP → 爆炸图HTML + 装配工程图DXF."""
+    r = build_assembly_json(step_path, out_dir, title, explode_scale)
+    # 装配工程图 (回转类装配体, 花叔 drawing.py; 失败不阻断爆炸图交付)
+    if r.get('ok') and r.get('assembly_json'):
+        drawing = _assembly_drawing(step_path, out_dir, title, r)
+        r['assembly_dxf'] = drawing.get('dxf')
+        r['assembly_dxf_png'] = drawing.get('png')
+        r['drawing_note'] = drawing.get('note') or drawing.get('error')
+    return r
+
+
+def _assembly_drawing(step_path, out_dir, title, r):
+    """花叔 drawing.py 出装配工程图 (仅回转类主轴Z装配体; 其他如实降级)."""
+    out = Path(out_dir)
+    manifest = r.get('manifest') or {}
+    main_axis = manifest.get('_beacon', {}).get('main_axis', 2)
+    if main_axis != 2:
+        return {'dxf': None, 'png': None,
+                'note': f'非回转类主轴 (主轴={["X", "Y", "Z"][main_axis]}), '
+                        '装配工程图仅支持主轴=Z 的回转类装配体, 已降级为爆炸图'}
+    venv_py = venv_python()
+    if venv_py is None:
+        return {'dxf': None, 'png': None, 'note': '缺 .venv-cad, 无法出装配工程图'}
+    aj = out / 'assembly.json'
+    if not aj.exists():
+        return {'dxf': None, 'png': None, 'note': '缺 assembly.json'}
+    # ASCII 文件名 (Windows 编码坑): 中文标题写进 assembly.json, 不在文件名里
+    dxf = out / 'assembly_drawing.dxf'
+    png = out / 'assembly_drawing.png'
+    env = {**__import__('os').environ, 'PYTHONUTF8': '1'}
+    cmd = [str(venv_py), str(DRAWING), str(aj), str(step_path),
+           '--out', str(dxf), '--png', str(png)]
+    cr = subprocess.run(cmd, capture_output=True, text=True, timeout=300,
+                        encoding='utf-8', errors='replace', env=env)
+    if cr.returncode == 0 and dxf.exists():
+        return {'dxf': str(dxf),
+                'png': str(png) if png.exists() else None,
+                'note': '装配工程图: 全剖主视图+俯视图, 齿轮GB/T 4459.2简化画法'}
+    return {'dxf': None, 'png': None,
+            'note': f'装配工程图失败: {(cr.stderr or cr.stdout)[-300:]}'}

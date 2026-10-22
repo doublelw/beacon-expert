@@ -52,6 +52,9 @@ def _ensure_columns():
         # 改图: 新任务记录来源任务
         ("cad2d_tasks", "source_task_id", "TEXT"),
         ("cad3d_tasks", "source_task_id", "TEXT"),
+        # 装配爆炸图: 装配工程图DXF + 预览
+        ("cad_assembly_tasks", "assembly_dxf_path", "TEXT"),
+        ("cad_assembly_tasks", "assembly_dxf_png", "TEXT"),
     ]
     with engine.begin() as conn:
         for table, col, typedef in additions:
@@ -310,6 +313,7 @@ class CadAssemblyTask(Base):
     assembly_json = Column(String(512), nullable=True)
     exploded_html = Column(String(512), nullable=True)   # 交互爆炸图网页
     assembly_dxf_path = Column(String(512), nullable=True)  # 装配工程图 (可选, 花叔 drawing.py)
+    assembly_dxf_png = Column(String(512), nullable=True)   # 装配工程图预览
     n_parts = Column(Integer, default=0)
     error = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

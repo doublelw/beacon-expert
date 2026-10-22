@@ -86,3 +86,40 @@ def test_single_solid_rejected(tmp_path):
     res = build_assembly_json(solo, str(tmp_path / 'out'))
     assert not res['ok'] and res['stage'] == 'input', res
     assert '<2' in res['error'] or '单一零件' in res['error']
+
+
+def test_run_explode_both_legs(planetary_step, tmp_path):
+    """run_explode 一次调用出两条腿: 爆炸图HTML + 装配工程图DXF (回转类主轴Z)."""
+    _venv_or_skip()
+    from src.engine.explode_gen import run_explode
+    r = run_explode(planetary_step, str(tmp_path), title='行星减速器')
+    assert r['ok'], r.get('error')
+    # 腿1: 交互爆炸图
+    assert r.get('html') and Path(r['html']).exists()
+    # 腿2: 装配工程图 (行星减速器主轴=Z, 花叔drawing.py适用)
+    assert r.get('assembly_dxf') and Path(r['assembly_dxf']).exists(), \
+        f'缺装配工程图: {r.get("drawing_note")}'
+    # 装配工程图 DXF 可回读, 含剖面线(HATCH)与明细栏(TEXT)
+    import ezdxf
+    doc = ezdxf.readfile(r['assembly_dxf'])
+    types = {e.dxftype() for e in doc.modelspace()}
+    assert 'HATCH' in types, '缺剖面线 (装配全剖应有 HATCH)'
+    assert 'TEXT' in types, '缺明细栏/技术要求文字'
+
+
+def test_assembly_drawing_degrades_for_non_rotary(tmp_path):
+    """非回转类 (主轴≠Z) → 装配工程图如实降级, 不硬造."""
+    _venv_or_skip()
+    from src.engine import explode_gen
+    # 手工造一个 manifest, 把 _beacon.main_axis 改成 0 (X主轴)
+    m = {
+        'title': 't', 'units': 'mm',
+        'bbox': {'min': [0, 0, 0], 'max': [50, 20, 20]},
+        'mass_total_g': 1.0, 'checks_ok': True, 'planetary': None,
+        'parts': [],
+        '_beacon': {'source': 'customer_step', 'main_axis': 0,
+                    'explode_scale': 0.8, 'n_parts': 0},
+    }
+    r = explode_gen._assembly_drawing('x.step', str(tmp_path), 't',
+                                      {'manifest': m, 'ok': True})
+    assert r['dxf'] is None and '非回转类' in r['note']

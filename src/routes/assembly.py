@@ -63,7 +63,7 @@ async def upload_asm(
 
 
 def _run_assembly(task_id: str):
-    """后台: 拆件 → assembly.json → 爆炸图HTML (venv 跑 build123d + 上游 viewer)."""
+    """后台: 拆件 → assembly.json → 爆炸图HTML + 装配工程图DXF (venv 侧全链)."""
     db = SessionLocal()
     task = db.query(CadAssemblyTask).filter(CadAssemblyTask.id == task_id).first()
     try:
@@ -74,6 +74,8 @@ def _run_assembly(task_id: str):
                         title=os.path.basename(task.step_path))
         task.assembly_json = r.get('assembly_json')
         task.exploded_html = r.get('html')
+        task.assembly_dxf_path = r.get('assembly_dxf')
+        task.assembly_dxf_png = r.get('assembly_dxf_png')
         task.n_parts = r.get('n_parts') or 0
         if r.get('ok'):
             task.status = "done"
@@ -100,8 +102,10 @@ async def get_status(task_id: str, user: User = Depends(get_current_user),
     return {
         "task_id": t.id, "status": t.status, "n_parts": t.n_parts,
         "step": t.step_path, "assembly_json": t.assembly_json,
-        "exploded_html": t.exploded_html, "error": t.error,
-        "created_at": str(t.created_at),
+        "exploded_html": t.exploded_html,
+        "assembly_dxf": t.assembly_dxf_path,
+        "assembly_dxf_png": t.assembly_dxf_png,
+        "error": t.error, "created_at": str(t.created_at),
     }
 
 
@@ -113,10 +117,13 @@ async def download(task_id: str, type: str = "exploded_html",
     if not t or t.user_id != user.id:
         raise HTTPException(404, "任务不存在")
     attr = {"exploded_html": t.exploded_html, "assembly_json": t.assembly_json,
+            "assembly_dxf": t.assembly_dxf_path,
+            "assembly_dxf_png": t.assembly_dxf_png,
             "step": t.step_path}.get(type)
     if not attr or not Path(attr).exists():
         raise HTTPException(404, f"产物 {type} 不存在 (status={t.status})")
     media = {"exploded_html": "text/html", "assembly_json": "application/json",
+             "assembly_dxf": "application/dxf", "assembly_dxf_png": "image/png",
              "step": "application/step"}[type]
     return FileResponse(attr, media_type=media,
                         filename=os.path.basename(attr))
