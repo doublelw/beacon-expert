@@ -1,0 +1,1047 @@
+{
+  "dimensions": [
+    {
+      "type": "linear",
+      "p1": [
+        -183.5,
+        -124.0
+      ],
+      "p2": [
+        -161.85,
+        -102.355
+      ],
+      "value": 21.650000000000006,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "21.65",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -161.85,
+        -102.355
+      ],
+      "p2": [
+        -147.82,
+        -392.904
+      ],
+      "value": 14.030000000000001,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "14.03",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -147.82,
+        -392.904
+      ],
+      "p2": [
+        -130.34,
+        42.05
+      ],
+      "value": 17.47999999999999,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "top",
+      "angle": 0,
+      "text": "17.48",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -130.34,
+        42.05
+      ],
+      "p2": [
+        -119.14,
+        -59.645
+      ],
+      "value": 11.200000000000003,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "top",
+      "angle": 0,
+      "text": "11.2",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -116.92,
+        65.3
+      ],
+      "p2": [
+        -103.5,
+        42.05
+      ],
+      "value": 13.420000000000002,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 1,
+      "side": "top",
+      "angle": 0,
+      "text": "13.42",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -103.5,
+        42.05
+      ],
+      "p2": [
+        111.4,
+        -0.6
+      ],
+      "value": 214.9,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "top",
+      "angle": 0,
+      "text": "214.9",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        111.4,
+        -0.6
+      ],
+      "p2": [
+        118.3,
+        -0.6
+      ],
+      "value": 6.8999999999999915,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "top",
+      "angle": 0,
+      "text": "6.9",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        118.3,
+        -0.6
+      ],
+      "p2": [
+        140.88,
+        -124.0
+      ],
+      "value": 22.58,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "22.58",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -161.855,
+        -102.36
+      ],
+      "p2": [
+        -161.855,
+        -59.65
+      ],
+      "value": 42.71,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "left",
+      "angle": 90,
+      "text": "42.7",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -161.855,
+        -59.65
+      ],
+      "p2": [
+        111.4,
+        -0.6
+      ],
+      "value": 59.05,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "right",
+      "angle": 90,
+      "text": "59.05",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        111.4,
+        -0.6
+      ],
+      "p2": [
+        -103.497,
+        42.05
+      ],
+      "value": 42.65,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "left",
+      "angle": 90,
+      "text": "42.65",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -103.497,
+        42.05
+      ],
+      "p2": [
+        -116.92,
+        65.3
+      ],
+      "value": 23.25,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "left",
+      "angle": 90,
+      "text": "23.25",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -116.92,
+        65.3
+      ],
+      "p2": [
+        -183.5,
+        81.379
+      ],
+      "value": 16.079000000000008,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "left",
+      "angle": 90,
+      "text": "16.08",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -161.855,
+        81.379
+      ],
+      "p2": [
+        140.88,
+        81.379
+      ],
+      "value": 302.735,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 2,
+      "side": "top",
+      "angle": 0,
+      "text": "302.74",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -130.343,
+        81.379
+      ],
+      "p2": [
+        140.88,
+        81.379
+      ],
+      "value": 271.22299999999996,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 3,
+      "side": "top",
+      "angle": 0,
+      "text": "271.22",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        140.88,
+        42.05
+      ],
+      "p2": [
+        140.88,
+        81.379
+      ],
+      "value": 39.32900000000001,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "right",
+      "angle": 90,
+      "text": "39.33",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        140.88,
+        -59.645
+      ],
+      "p2": [
+        140.88,
+        81.379
+      ],
+      "value": 141.024,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 1,
+      "side": "right",
+      "angle": 90,
+      "text": "141.02",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -119.145,
+        81.379
+      ],
+      "p2": [
+        140.88,
+        81.379
+      ],
+      "value": 260.025,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 4,
+      "side": "top",
+      "angle": 0,
+      "text": "260.02",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -183.5,
+        -124.0
+      ],
+      "p2": [
+        140.88,
+        -124.0
+      ],
+      "value": 324.38,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 1,
+      "side": "bottom",
+      "angle": 0,
+      "text": "324",
+      "leader_pts": [],
+      "tol": "%%P0.2"
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -183.5,
+        -124.0
+      ],
+      "p2": [
+        -183.5,
+        81.379
+      ],
+      "value": 205.37900000000002,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 1,
+      "side": "left",
+      "angle": 90,
+      "text": "205",
+      "leader_pts": [],
+      "tol": "%%P0.2"
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -183.5,
+        -29.5
+      ],
+      "p2": [
+        140.88,
+        -29.5
+      ],
+      "value": 324.38,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 2,
+      "side": "bottom",
+      "angle": 0,
+      "text": "324",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -183.5,
+        -29.5
+      ],
+      "p2": [
+        -183.5,
+        0.402
+      ],
+      "value": 29.902,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 2,
+      "side": "left",
+      "angle": 90,
+      "text": "29.9",
+      "leader_pts": [],
+      "tol": "%%P0.2"
+    },
+    {
+      "type": "diameter",
+      "p1": [
+        -147.821,
+        -392.904
+      ],
+      "p2": [
+        -147.821,
+        -392.904
+      ],
+      "value": 1.0,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "1-%%C<>",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "diameter",
+      "p1": [
+        -116.92,
+        65.3
+      ],
+      "p2": [
+        -116.92,
+        65.3
+      ],
+      "value": 1.85,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "3-%%C<>",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "leader",
+      "p1": [
+        -116.92,
+        65.3
+      ],
+      "p2": [
+        -116.92,
+        65.3
+      ],
+      "value": 0.925,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "3-%%C1.85",
+      "leader_pts": [
+        [
+          -116.27250000000001,
+          65.94749999999999
+        ],
+        [
+          -100.995,
+          81.225
+        ],
+        [
+          -77.995,
+          81.225
+        ]
+      ],
+      "tol": ""
+    },
+    {
+      "type": "diameter",
+      "p1": [
+        -161.855,
+        -102.355
+      ],
+      "p2": [
+        -161.855,
+        -102.355
+      ],
+      "value": 2.2,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "4-%%C<>",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "leader",
+      "p1": [
+        -161.855,
+        -102.355
+      ],
+      "p2": [
+        -161.855,
+        -102.355
+      ],
+      "value": 1.1,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "4-%%C2.2",
+      "leader_pts": [
+        [
+          -161.08499999999998,
+          -101.58500000000001
+        ],
+        [
+          -145.755,
+          -86.25500000000001
+        ],
+        [
+          -122.755,
+          -86.25500000000001
+        ]
+      ],
+      "tol": ""
+    },
+    {
+      "type": "diameter",
+      "p1": [
+        111.4,
+        -0.6
+      ],
+      "p2": [
+        111.4,
+        -0.6
+      ],
+      "value": 6.0,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "2-%%C<>",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "leader",
+      "p1": [
+        140.88,
+        -14.549
+      ],
+      "p2": [
+        140.88,
+        -14.549
+      ],
+      "value": 29.902,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "t=29.902",
+      "leader_pts": [
+        [
+          140.88,
+          -14.549
+        ],
+        [
+          155.88,
+          -4.5489999999999995
+        ],
+        [
+          173.88,
+          -4.5489999999999995
+        ]
+      ],
+      "tol": ""
+    },
+    {
+      "type": "aligned",
+      "p1": [
+        -161.855,
+        -102.355
+      ],
+      "p2": [
+        -161.855,
+        -59.645
+      ],
+      "value": 42.71,
+      "layer": "DIM",
+      "view": "Front",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "42.7",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        183.5,
+        -124.0
+      ],
+      "p2": [
+        -140.88,
+        -124.0
+      ],
+      "value": 324.38,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "324.38",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        183.5,
+        -124.0
+      ],
+      "p2": [
+        183.5,
+        81.379
+      ],
+      "value": 205.37900000000002,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 0,
+      "side": "right",
+      "angle": 90,
+      "text": "205.38",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "diameter",
+      "p1": [
+        147.821,
+        -392.904
+      ],
+      "p2": [
+        147.821,
+        -392.904
+      ],
+      "value": 1.0,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "1-%%C<>",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "diameter",
+      "p1": [
+        116.92,
+        65.3
+      ],
+      "p2": [
+        116.92,
+        65.3
+      ],
+      "value": 1.85,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "3-%%C<>",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "diameter",
+      "p1": [
+        161.855,
+        -102.355
+      ],
+      "p2": [
+        161.855,
+        -102.355
+      ],
+      "value": 2.2,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "4-%%C<>",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "diameter",
+      "p1": [
+        -111.4,
+        -0.6
+      ],
+      "p2": [
+        -111.4,
+        -0.6
+      ],
+      "value": 6.0,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "2-%%C<>",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -140.88,
+        -102.355
+      ],
+      "p2": [
+        161.855,
+        -102.355
+      ],
+      "value": 302.735,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 0,
+      "side": "left",
+      "angle": 0,
+      "text": "302.74",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        161.855,
+        -102.355
+      ],
+      "p2": [
+        161.855,
+        81.379
+      ],
+      "value": 183.734,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 0,
+      "side": "top",
+      "angle": 90,
+      "text": "183.73",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -140.88,
+        42.05
+      ],
+      "p2": [
+        130.343,
+        42.05
+      ],
+      "value": 271.22299999999996,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 1,
+      "side": "left",
+      "angle": 0,
+      "text": "271.22",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        130.343,
+        42.05
+      ],
+      "p2": [
+        130.343,
+        81.379
+      ],
+      "value": 39.32900000000001,
+      "layer": "DIM",
+      "view": "Back",
+      "level": 1,
+      "side": "top",
+      "angle": 90,
+      "text": "39.33",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -183.5,
+        -29.5
+      ],
+      "p2": [
+        -169.81,
+        -29.5
+      ],
+      "value": 13.689999999999998,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "13.7",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -169.81,
+        -29.5
+      ],
+      "p2": [
+        140.88,
+        -29.5
+      ],
+      "value": 310.69,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "310.7",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -183.5,
+        -29.5
+      ],
+      "p2": [
+        -183.5,
+        0.402
+      ],
+      "value": 29.902,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "left",
+      "angle": 90,
+      "text": "29.9",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "leader",
+      "p1": [
+        -169.806,
+        -14.549
+      ],
+      "p2": [
+        -169.806,
+        -14.549
+      ],
+      "value": 43.0,
+      "layer": "DIM",
+      "view": "Top",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "折弯R43 (虚线为折弯线)",
+      "leader_pts": [
+        [
+          -165.806,
+          -14.549
+        ],
+        [
+          -153.806,
+          -8.549
+        ],
+        [
+          -139.806,
+          -8.549
+        ]
+      ],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -169.81,
+        -0.402
+      ],
+      "p2": [
+        140.88,
+        -0.402
+      ],
+      "value": 310.69,
+      "layer": "DIM",
+      "view": "Bottom",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "310.7",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -0.402,
+        -124.0
+      ],
+      "p2": [
+        -0.402,
+        81.379
+      ],
+      "value": 205.37900000000002,
+      "layer": "DIM",
+      "view": "Left",
+      "level": 0,
+      "side": "right",
+      "angle": 90,
+      "text": "205.38",
+      "leader_pts": [],
+      "tol": ""
+    },
+    {
+      "type": "leader",
+      "p1": [
+        -0.402,
+        -21.310499999999998
+      ],
+      "p2": [
+        -0.402,
+        -21.310499999999998
+      ],
+      "value": 1.4,
+      "layer": "DIM",
+      "view": "Left",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0.0,
+      "text": "板厚 t=1.4",
+      "leader_pts": [
+        [
+          -0.402,
+          -21.310499999999998
+        ],
+        [
+          13.598,
+          -13.310499999999998
+        ],
+        [
+          27.598,
+          -13.310499999999998
+        ]
+      ],
+      "tol": ""
+    },
+    {
+      "type": "linear",
+      "p1": [
+        -29.5,
+        -124.0
+      ],
+      "p2": [
+        0.402,
+        -124.0
+      ],
+      "value": 29.902,
+      "layer": "DIM",
+      "view": "Right",
+      "level": 0,
+      "side": "bottom",
+      "angle": 0,
+      "text": "29.9",
+      "leader_pts": [],
+      "tol": ""
+    }
+  ],
+  "stats": {
+    "total": 48,
+    "linear": 34,
+    "radius": 0,
+    "leader": 5,
+    "diameter": 8,
+    "aligned": 1,
+    "by_type": {
+      "linear": 34,
+      "diameter": 8,
+      "leader": 5,
+      "aligned": 1
+    },
+    "target": 100,
+    "meets_target": false,
+    "meets_linear": false,
+    "meets_radius": false
+  }
+}

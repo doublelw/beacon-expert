@@ -1,0 +1,2328 @@
+{
+ "source": "D:\\project\\beacon-expert\\前壳\\前壳.stp",
+ "method": "veritas_v1",
+ "process": "sheet_metal",
+ "bbox": {
+  "xmin": -183.5,
+  "ymin": -124.0,
+  "zmin": -29.5,
+  "xmax": 140.88,
+  "ymax": 81.379,
+  "zmax": 0.402
+ },
+ "thickness_axis": "Z",
+ "thickness": 1.4,
+ "features": [
+  {
+   "id": "F0001",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -161.855,
+    -102.355,
+    -14.3
+   ],
+   "radius": 1.1,
+   "diameter": 2.2,
+   "all_radii": [
+    1.1
+   ],
+   "through": true,
+   "span": 2.2,
+   "angle_coverage": 360.0,
+   "face_ids": [
+    "0:36",
+    "0:38"
+   ],
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0002",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -161.855,
+    -59.645,
+    -14.3
+   ],
+   "radius": 1.1,
+   "diameter": 2.2,
+   "all_radii": [
+    1.1
+   ],
+   "through": true,
+   "span": 2.2,
+   "angle_coverage": 360.0,
+   "face_ids": [
+    "0:68",
+    "0:70"
+   ],
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0003",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -119.145,
+    -59.645,
+    -14.3
+   ],
+   "radius": 1.1,
+   "diameter": 2.2,
+   "all_radii": [
+    1.1
+   ],
+   "through": true,
+   "span": 2.2,
+   "angle_coverage": 360.0,
+   "face_ids": [
+    "0:79",
+    "0:80"
+   ],
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0004",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -119.145,
+    -102.355,
+    -14.3
+   ],
+   "radius": 1.1,
+   "diameter": 2.2,
+   "all_radii": [
+    1.1
+   ],
+   "through": true,
+   "span": 2.2,
+   "angle_coverage": 360.0,
+   "face_ids": [
+    "0:86",
+    "0:88"
+   ],
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0005",
+   "type": "PIERCING",
+   "axis_dir": "X",
+   "direction": "X-",
+   "position": [
+    -147.821,
+    -392.904,
+    -29.0
+   ],
+   "radius": 0.5,
+   "diameter": 1.0,
+   "all_radii": [
+    0.5
+   ],
+   "through": true,
+   "span": 1.547,
+   "angle_coverage": 180.0000001565602,
+   "face_ids": [
+    "0:91",
+    "0:108"
+   ],
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0006",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -116.92,
+    65.3,
+    -6.25
+   ],
+   "radius": 0.925,
+   "diameter": 1.85,
+   "all_radii": [
+    0.925
+   ],
+   "through": true,
+   "span": 1.9,
+   "angle_coverage": 360.0,
+   "face_ids": [
+    "0:270",
+    "0:271"
+   ],
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0007",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -103.497,
+    42.05,
+    -6.25
+   ],
+   "radius": 0.925,
+   "diameter": 1.85,
+   "all_radii": [
+    0.925
+   ],
+   "through": true,
+   "span": 1.9,
+   "angle_coverage": 360.0,
+   "face_ids": [
+    "0:276",
+    "0:277"
+   ],
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0008",
+   "type": "PIERCING",
+   "axis_dir": "Z",
+   "direction": "Z+",
+   "position": [
+    -130.343,
+    42.05,
+    -6.25
+   ],
+   "radius": 0.925,
+   "diameter": 1.85,
+   "all_radii": [
+    0.925
+   ],
+   "through": true,
+   "span": 1.9,
+   "angle_coverage": 360.0,
+   "face_ids": [
+    "0:282",
+    "0:283"
+   ],
+   "source": "understand",
+   "hole_type": "csink",
+   "head_face": "+Z"
+  },
+  {
+   "id": "F0009",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y+",
+   "position": [
+    111.4,
+    -0.6,
+    -15.4
+   ],
+   "radius": 3.0,
+   "diameter": 6.0,
+   "all_radii": [
+    3.0
+   ],
+   "through": true,
+   "span": 1.9,
+   "angle_coverage": 179.9999999942704,
+   "face_ids": [
+    "0:298",
+    "0:338"
+   ],
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0010",
+   "type": "PIERCING",
+   "axis_dir": "Y",
+   "direction": "Y-",
+   "position": [
+    118.3,
+    -0.6,
+    -15.4
+   ],
+   "radius": 3.0,
+   "diameter": 6.0,
+   "all_radii": [
+    3.0
+   ],
+   "through": true,
+   "span": 1.9,
+   "angle_coverage": 179.99999883383992,
+   "face_ids": [
+    "0:302",
+    "0:342"
+   ],
+   "source": "understand",
+   "hole_type": "clear"
+  },
+  {
+   "id": "F0011",
+   "type": "BEND",
+   "face_ids": [
+    "0:16"
+   ],
+   "radius": 43.0,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "axis_dir": "Z",
+   "center": [
+    -169.806,
+    -49.534,
+    -4.571
+   ],
+   "span": 8.859,
+   "bend_angle": 94.1,
+   "angle": 94.1,
+   "source": "understand"
+  },
+  {
+   "id": "F0012",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 0,
+   "bbox": [
+    -140.589,
+    68.748,
+    -9.171,
+    -128.249,
+    81.088,
+    -0.743
+   ],
+   "center": [
+    -134.419,
+    74.918,
+    -4.957
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0013",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 4,
+   "bbox": [
+    128.248,
+    68.749,
+    -9.171,
+    140.588,
+    81.089,
+    -0.743
+   ],
+   "center": [
+    134.418,
+    74.919,
+    -4.957
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0014",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 6,
+   "bbox": [
+    128.249,
+    -81.088,
+    -9.171,
+    140.589,
+    -68.748,
+    -0.743
+   ],
+   "center": [
+    134.419,
+    -74.918,
+    -4.957
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0015",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 9,
+   "bbox": [
+    128.251,
+    -81.379,
+    -1.269,
+    140.879,
+    -68.834,
+    0.213
+   ],
+   "center": [
+    134.565,
+    -75.106,
+    -0.528
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0016",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 11,
+   "bbox": [
+    128.331,
+    68.996,
+    -1.269,
+    140.88,
+    81.379,
+    0.21
+   ],
+   "center": [
+    134.606,
+    75.187,
+    -0.53
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0017",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 13,
+   "bbox": [
+    -140.881,
+    68.63,
+    -1.269,
+    -128.498,
+    81.377,
+    0.223
+   ],
+   "center": [
+    -134.689,
+    75.004,
+    -0.523
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0018",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 15,
+   "bbox": [
+    -141.672,
+    -38.153,
+    -1.473,
+    -138.537,
+    -36.261,
+    0.402
+   ],
+   "center": [
+    -140.105,
+    -37.207,
+    -0.535
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0019",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 17,
+   "bbox": [
+    -141.383,
+    -38.364,
+    -9.824,
+    -136.344,
+    -36.527,
+    -0.694
+   ],
+   "center": [
+    -138.864,
+    -37.445,
+    -5.259
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0020",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 20,
+   "bbox": [
+    -97.656,
+    -81.819,
+    -0.153,
+    -97.463,
+    -80.632,
+    0.003
+   ],
+   "center": [
+    -97.559,
+    -81.225,
+    -0.075
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0021",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 21,
+   "bbox": [
+    -97.65,
+    -81.092,
+    -0.15,
+    -96.074,
+    -79.479,
+    0.004
+   ],
+   "center": [
+    -96.862,
+    -80.286,
+    -0.073
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0022",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 23,
+   "bbox": [
+    -141.308,
+    -38.153,
+    -0.156,
+    -138.984,
+    -36.574,
+    0.002
+   ],
+   "center": [
+    -140.146,
+    -37.364,
+    -0.077
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0023",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 25,
+   "bbox": [
+    -139.211,
+    68.765,
+    -0.076,
+    -128.265,
+    79.711,
+    0.001
+   ],
+   "center": [
+    -133.738,
+    74.238,
+    -0.037
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0024",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 27,
+   "bbox": [
+    128.265,
+    68.766,
+    -0.066,
+    139.199,
+    79.699,
+    0.001
+   ],
+   "center": [
+    133.732,
+    74.232,
+    -0.033
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0025",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 29,
+   "bbox": [
+    128.266,
+    -79.702,
+    -0.069,
+    139.203,
+    -68.765,
+    0.001
+   ],
+   "center": [
+    133.734,
+    -74.234,
+    -0.034
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0026",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 286,
+   "bbox": [
+    -97.578,
+    -81.634,
+    -1.021,
+    -96.253,
+    -79.656,
+    -0.04
+   ],
+   "center": [
+    -96.915,
+    -80.645,
+    -0.531
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0027",
+   "type": "STAMP",
+   "surface": "BSpline",
+   "face": 287,
+   "bbox": [
+    -97.827,
+    -81.805,
+    -9.758,
+    -95.983,
+    -76.844,
+    -0.725
+   ],
+   "center": [
+    -96.905,
+    -79.324,
+    -5.241
+   ],
+   "source": "bspline_face"
+  },
+  {
+   "id": "F0028",
+   "type": "CHAMFER",
+   "face": 31,
+   "radius": 39.9,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -140.5,
+    -81.0,
+    -1.312
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0029",
+   "type": "CHAMFER",
+   "face": 73,
+   "radius": 39.9,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -140.5,
+    -81.0,
+    -1.312
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0030",
+   "type": "CHAMFER",
+   "face": 155,
+   "radius": 0.75,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -108.8,
+    -45.9,
+    -2.25
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0031",
+   "type": "CHAMFER",
+   "face": 157,
+   "radius": 2.55,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -107.0,
+    13.3,
+    -2.25
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0032",
+   "type": "CHAMFER",
+   "face": 163,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    -100.3,
+    15.0,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0033",
+   "type": "CHAMFER",
+   "face": 169,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    -81.3,
+    15.0,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0034",
+   "type": "CHAMFER",
+   "face": 188,
+   "radius": 2.5,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    -108.7,
+    6.6,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0035",
+   "type": "CHAMFER",
+   "face": 190,
+   "radius": 2.5,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    -108.7,
+    -40.4,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0036",
+   "type": "CHAMFER",
+   "face": 217,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    -86.2,
+    -66.9,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0037",
+   "type": "CHAMFER",
+   "face": 221,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    8.8,
+    -66.9,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0038",
+   "type": "CHAMFER",
+   "face": 237,
+   "radius": 18.65,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -116.92,
+    49.8,
+    -2.15
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0039",
+   "type": "CHAMFER",
+   "face": 238,
+   "radius": 18.65,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -116.92,
+    49.8,
+    -2.15
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0040",
+   "type": "CHAMFER",
+   "face": 242,
+   "radius": 12.1,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -116.92,
+    49.8,
+    -4.65
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0041",
+   "type": "CHAMFER",
+   "face": 243,
+   "radius": 12.1,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -116.92,
+    49.8,
+    -4.65
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0042",
+   "type": "CHAMFER",
+   "face": 268,
+   "radius": 1.225,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -116.92,
+    65.3,
+    -4.9
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0043",
+   "type": "CHAMFER",
+   "face": 269,
+   "radius": 1.225,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -116.92,
+    65.3,
+    -4.9
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0044",
+   "type": "CHAMFER",
+   "face": 272,
+   "radius": 0.661,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -116.92,
+    65.3,
+    -7.359
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0045",
+   "type": "CHAMFER",
+   "face": 273,
+   "radius": 0.661,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -116.92,
+    65.3,
+    -7.359
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0046",
+   "type": "CHAMFER",
+   "face": 274,
+   "radius": 1.225,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -103.497,
+    42.05,
+    -4.9
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0047",
+   "type": "CHAMFER",
+   "face": 275,
+   "radius": 1.225,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -103.497,
+    42.05,
+    -4.9
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0048",
+   "type": "CHAMFER",
+   "face": 278,
+   "radius": 0.661,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -103.497,
+    42.05,
+    -7.359
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0049",
+   "type": "CHAMFER",
+   "face": 279,
+   "radius": 0.661,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -103.497,
+    42.05,
+    -7.359
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0050",
+   "type": "CHAMFER",
+   "face": 280,
+   "radius": 1.225,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -130.343,
+    42.05,
+    -4.9
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0051",
+   "type": "CHAMFER",
+   "face": 281,
+   "radius": 1.225,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -130.343,
+    42.05,
+    -4.9
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0052",
+   "type": "CHAMFER",
+   "face": 284,
+   "radius": 0.661,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -130.343,
+    42.05,
+    -7.359
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0053",
+   "type": "CHAMFER",
+   "face": 285,
+   "radius": 0.661,
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "center": [
+    -130.343,
+    42.05,
+    -7.359
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0054",
+   "type": "CHAMFER",
+   "face": 299,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    111.3,
+    -66.9,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0055",
+   "type": "CHAMFER",
+   "face": 301,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "center": [
+    118.3,
+    -66.9,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0056",
+   "type": "CHAMFER",
+   "face": 306,
+   "radius": 2.5,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    -66.7,
+    29.6,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0057",
+   "type": "CHAMFER",
+   "face": 315,
+   "radius": 2.5,
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    -66.7,
+    52.3,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0058",
+   "type": "CHAMFER",
+   "face": 318,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    -53.3,
+    65.7,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0059",
+   "type": "CHAMFER",
+   "face": 330,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    14.3,
+    65.7,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0060",
+   "type": "CHAMFER",
+   "face": 337,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    111.5,
+    65.7,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0061",
+   "type": "CHAMFER",
+   "face": 341,
+   "radius": 2.5,
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "center": [
+    118.3,
+    65.7,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0062",
+   "type": "CHAMFER",
+   "face": 354,
+   "radius": 2.5,
+   "axis": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    126.7,
+    52.3,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0063",
+   "type": "CHAMFER",
+   "face": 360,
+   "radius": 2.5,
+   "axis": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "center": [
+    126.7,
+    -53.5,
+    -15.4
+   ],
+   "source": "cone_face"
+  },
+  {
+   "id": "F0064",
+   "type": "OUTLINE",
+   "bbox": [
+    -183.5,
+    -124.0,
+    -29.5,
+    140.88,
+    81.379,
+    0.402
+   ],
+   "width": 324.38,
+   "height": 205.379,
+   "depth": 29.902
+  }
+ ],
+ "unresolved_cylinders": [
+  {
+   "axis": "Y",
+   "r": 0.328300808216,
+   "span": 105.8119891341,
+   "angle": 35.4810658739426,
+   "position": [
+    -139.095,
+    16.094,
+    -0.016
+   ],
+   "face_id": "0:24",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 0.3283007242996,
+   "span": 256.99999918575026,
+   "angle": 35.47767083557485,
+   "position": [
+    0.0,
+    79.595,
+    -0.016
+   ],
+   "face_id": "0:26",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 0.3283007242356,
+   "span": 138.0000724069706,
+   "angle": 35.47698690222711,
+   "position": [
+    139.095,
+    0.0,
+    -0.016
+   ],
+   "face_id": "0:28",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 0.3283006813532,
+   "span": 224.81055273396,
+   "angle": 35.47779130044645,
+   "position": [
+    16.095,
+    -79.595,
+    -0.016
+   ],
+   "face_id": "0:30",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 4.00000000000027,
+   "angle": 107.955125748921,
+   "position": [
+    -175.313,
+    -100.691,
+    -7.0
+   ],
+   "face_id": "0:41",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 4.000000000000199,
+   "angle": 107.74258905138522,
+   "position": [
+    -160.191,
+    -115.814,
+    -7.0
+   ],
+   "face_id": "0:45",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 4.0,
+   "angle": 107.7146201225332,
+   "position": [
+    -120.809,
+    -115.814,
+    -7.0
+   ],
+   "face_id": "0:47",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 4.000000000000021,
+   "angle": 107.22972318299566,
+   "position": [
+    -105.684,
+    -100.691,
+    -7.0
+   ],
+   "face_id": "0:51",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 4.0,
+   "angle": 107.9566110526524,
+   "position": [
+    -105.687,
+    -61.309,
+    -7.0
+   ],
+   "face_id": "0:53",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 4.0,
+   "angle": 107.81444087686906,
+   "position": [
+    -120.809,
+    -46.186,
+    -7.0
+   ],
+   "face_id": "0:57",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 4.0,
+   "angle": 107.7146201186232,
+   "position": [
+    -160.191,
+    -46.186,
+    -7.0
+   ],
+   "face_id": "0:59",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 4.0,
+   "angle": 107.22972318171423,
+   "position": [
+    -175.316,
+    -61.309,
+    -7.0
+   ],
+   "face_id": "0:63",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 2.3,
+   "span": 6.499999999999,
+   "angle": 90.00000016267023,
+   "position": [
+    -108.626,
+    14.926,
+    -5.75
+   ],
+   "face_id": "0:158",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000004,
+   "angle": 180.0,
+   "position": [
+    -91.3,
+    14.05,
+    -15.9
+   ],
+   "face_id": "0:165",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000004,
+   "angle": 180.0,
+   "position": [
+    -91.3,
+    14.05,
+    -12.9
+   ],
+   "face_id": "0:166",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -107.75,
+    3.8,
+    -15.9
+   ],
+   "face_id": "0:193",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -107.75,
+    3.8,
+    -12.9
+   ],
+   "face_id": "0:194",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -107.75,
+    -28.2,
+    -15.9
+   ],
+   "face_id": "0:195",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -107.75,
+    -28.2,
+    -12.9
+   ],
+   "face_id": "0:196",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 6.500000000000007,
+   "angle": 90.00000151502694,
+   "position": [
+    -109.154,
+    -46.254,
+    -5.75
+   ],
+   "face_id": "0:197",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -50.0,
+    -65.95,
+    -15.9
+   ],
+   "face_id": "0:213",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -50.0,
+    -65.95,
+    -12.9
+   ],
+   "face_id": "0:214",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    7.0,
+    -65.95,
+    -15.9
+   ],
+   "face_id": "0:226",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    7.0,
+    -65.95,
+    -12.9
+   ],
+   "face_id": "0:227",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -82.0,
+    -65.95,
+    -15.9
+   ],
+   "face_id": "0:228",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -82.0,
+    -65.95,
+    -12.9
+   ],
+   "face_id": "0:229",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    116.5,
+    -65.95,
+    -15.9
+   ],
+   "face_id": "0:295",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    116.5,
+    -65.95,
+    -12.9
+   ],
+   "face_id": "0:296",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -50.5,
+    64.75,
+    -15.9
+   ],
+   "face_id": "0:320",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    -50.5,
+    64.75,
+    -12.9
+   ],
+   "face_id": "0:322",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    7.0,
+    64.75,
+    -15.9
+   ],
+   "face_id": "0:323",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    7.0,
+    64.75,
+    -12.9
+   ],
+   "face_id": "0:324",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    114.946,
+    64.75,
+    -15.9
+   ],
+   "face_id": "0:325",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "Y",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    114.946,
+    64.75,
+    -12.9
+   ],
+   "face_id": "0:326",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    125.75,
+    -0.0,
+    -15.9
+   ],
+   "face_id": "0:346",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    125.75,
+    -0.0,
+    -12.9
+   ],
+   "face_id": "0:347",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    125.75,
+    -50.0,
+    -15.9
+   ],
+   "face_id": "0:349",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    125.75,
+    -50.0,
+    -12.9
+   ],
+   "face_id": "0:350",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    125.75,
+    50.0,
+    -15.9
+   ],
+   "face_id": "0:351",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 1.5,
+   "span": 2.9000000000000057,
+   "angle": 180.0,
+   "position": [
+    125.75,
+    50.0,
+    -12.9
+   ],
+   "face_id": "0:352",
+   "reason": "long_concave_cylinder_ambiguous"
+  },
+  {
+   "axis": "X",
+   "r": 0.5,
+   "span": 1.547,
+   "angle": 90.00000014094752,
+   "position": [
+    -106.95,
+    338.924,
+    -29.0
+   ],
+   "face_id": "0:94",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.00000002991911,
+   "position": [
+    -115.478,
+    -392.904,
+    -23.6
+   ],
+   "face_id": "0:98",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.00000002076139,
+   "position": [
+    -109.528,
+    -392.904,
+    -23.6
+   ],
+   "face_id": "0:100",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.0000000343545,
+   "position": [
+    -109.528,
+    -392.904,
+    -26.6
+   ],
+   "face_id": "0:102",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.0000000169118,
+   "position": [
+    -115.478,
+    -392.904,
+    -26.6
+   ],
+   "face_id": "0:104",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 0.5,
+   "span": 1.547,
+   "angle": 90.00000014668616,
+   "position": [
+    -159.408,
+    349.905,
+    -29.0
+   ],
+   "face_id": "0:105",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.00000001240346,
+   "position": [
+    -165.522,
+    349.905,
+    -23.6
+   ],
+   "face_id": "0:112",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.0000000082153,
+   "position": [
+    -171.472,
+    349.905,
+    -23.6
+   ],
+   "face_id": "0:114",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.0000000094744,
+   "position": [
+    -171.472,
+    349.905,
+    -26.6
+   ],
+   "face_id": "0:116",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.00000000428331,
+   "position": [
+    -165.522,
+    349.905,
+    -26.6
+   ],
+   "face_id": "0:118",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 0.5,
+   "span": 1.547,
+   "angle": 90.00000013292622,
+   "position": [
+    304.547,
+    -114.55,
+    -29.0
+   ],
+   "face_id": "0:119",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 0.5,
+   "span": 1.547,
+   "angle": 90.00000015584453,
+   "position": [
+    -466.546,
+    -99.908,
+    -29.0
+   ],
+   "face_id": "0:121",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.00000002971535,
+   "position": [
+    -453.818,
+    -106.022,
+    -23.6
+   ],
+   "face_id": "0:125",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.00000002600657,
+   "position": [
+    -443.919,
+    -111.972,
+    -23.6
+   ],
+   "face_id": "0:127",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.00000003308463,
+   "position": [
+    -443.919,
+    -111.972,
+    -26.6
+   ],
+   "face_id": "0:129",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 1.0,
+   "span": 1.9,
+   "angle": 90.00000001698366,
+   "position": [
+    -453.818,
+    -106.022,
+    -26.6
+   ],
+   "face_id": "0:131",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 0.8,
+   "span": 2.0,
+   "angle": 86.33475794668465,
+   "position": [
+    -96.79,
+    -78.2,
+    -1.0
+   ],
+   "face_id": "0:142",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 0.8,
+   "span": 2.0,
+   "angle": 86.33475730961014,
+   "position": [
+    -137.7,
+    -37.29,
+    -1.0
+   ],
+   "face_id": "0:143",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 1.4,
+   "angle": 90.0,
+   "position": [
+    -96.61,
+    -45.9,
+    -8.3
+   ],
+   "face_id": "0:151",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 2.1,
+   "angle": 90.00000002066557,
+   "position": [
+    -103.8,
+    15.1,
+    -7.95
+   ],
+   "face_id": "0:160",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.00000000001893,
+   "position": [
+    -81.3,
+    13.55,
+    -15.4
+   ],
+   "face_id": "0:168",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 89.99999864667372,
+   "position": [
+    -100.3,
+    13.55,
+    -15.4
+   ],
+   "face_id": "0:172",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 1.4,
+   "angle": 90.00000010313262,
+   "position": [
+    -108.8,
+    -43.9,
+    -8.3
+   ],
+   "face_id": "0:177",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 0.5,
+   "span": 1.4,
+   "angle": 90.0000004655754,
+   "position": [
+    -108.8,
+    10.1,
+    -8.3
+   ],
+   "face_id": "0:181",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.0,
+   "position": [
+    -107.25,
+    6.6,
+    -15.4
+   ],
+   "face_id": "0:187",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 89.99999864667372,
+   "position": [
+    -107.25,
+    -40.4,
+    -15.4
+   ],
+   "face_id": "0:191",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 1.0,
+   "span": 1.4,
+   "angle": 90.0,
+   "position": [
+    20.0,
+    -66.7,
+    -8.3
+   ],
+   "face_id": "0:205",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 3.0,
+   "span": 1.4,
+   "angle": 90.0,
+   "position": [
+    22.0,
+    -48.5,
+    -8.3
+   ],
+   "face_id": "0:207",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 3.0,
+   "span": 1.4,
+   "angle": 90.0,
+   "position": [
+    105.0,
+    -48.5,
+    -8.3
+   ],
+   "face_id": "0:209",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 1.0,
+   "span": 1.4,
+   "angle": 90.0,
+   "position": [
+    107.0,
+    -66.7,
+    -8.3
+   ],
+   "face_id": "0:211",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.0,
+   "position": [
+    -86.2,
+    -65.45,
+    -15.4
+   ],
+   "face_id": "0:218",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 89.99999970989236,
+   "position": [
+    8.8,
+    -65.45,
+    -15.4
+   ],
+   "face_id": "0:222",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 1.0,
+   "span": 1.4,
+   "angle": 90.00000000000244,
+   "position": [
+    -2.25,
+    -63.5,
+    -8.3
+   ],
+   "face_id": "0:230",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 3.0,
+   "span": 1.4,
+   "angle": 90.00000000000081,
+   "position": [
+    -4.25,
+    -42.5,
+    -8.3
+   ],
+   "face_id": "0:232",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 3.0,
+   "span": 1.4,
+   "angle": 90.0,
+   "position": [
+    -68.25,
+    -42.5,
+    -8.3
+   ],
+   "face_id": "0:234",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Z",
+   "r": 1.0,
+   "span": 1.4,
+   "angle": 90.0,
+   "position": [
+    -70.25,
+    -63.5,
+    -8.3
+   ],
+   "face_id": "0:236",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.0,
+   "position": [
+    -65.25,
+    29.6,
+    -15.4
+   ],
+   "face_id": "0:307",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.00000000002748,
+   "position": [
+    -65.25,
+    52.3,
+    -15.4
+   ],
+   "face_id": "0:314",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.0,
+   "position": [
+    -53.3,
+    64.25,
+    -15.4
+   ],
+   "face_id": "0:327",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "Y",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.0,
+   "position": [
+    14.3,
+    64.25,
+    -15.4
+   ],
+   "face_id": "0:331",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.0,
+   "position": [
+    125.25,
+    52.3,
+    -15.4
+   ],
+   "face_id": "0:353",
+   "reason": "partial_cylinder_not_a_hole"
+  },
+  {
+   "axis": "X",
+   "r": 3.0,
+   "span": 1.9,
+   "angle": 90.0,
+   "position": [
+    125.25,
+    -53.5,
+    -15.4
+   ],
+   "face_id": "0:359",
+   "reason": "partial_cylinder_not_a_hole"
+  }
+ ],
+ "n_solids": 1,
+ "summary": {
+  "total_features": 64,
+  "by_type": {
+   "PIERCING": 10,
+   "BEND": 1,
+   "STAMP": 16,
+   "CHAMFER": 36,
+   "OUTLINE": 1
+  },
+  "holes_by_axis": {
+   "Z": 7,
+   "X": 1,
+   "Y": 2
+  },
+  "bends": 1,
+  "stamps": 16,
+  "chamfers": 36,
+  "unresolved_cylinders": 82
+ }
+}

@@ -1,8 +1,14 @@
-"""C线 Phase 4: 任意来源 DXF 修改 API.
+"""C线改图 API: 两条路径.
 
-POST /api/dxfmod/modify  multipart: file=xxx.dxf + instructions=文字
-  → 任务: 提取摘要→LLM编辑计划(STRETCH窗口操作)→确定性应用→作用域审计→前后对比图
-GET  /api/dxfmod/status/{id} / download/{id}?type=dxf|compare|plan|report
+路径A (精确, 平台生成的图纸): POST /api/dxfmod/modify-task/{task_id}
+  在**投影参数源**上改 (proj_v3/veritas/annotation) → 重跑 render_engine
+  → 标注按几何重新派生、多视图自动一致、门禁自动复跑 (proj_edit.run_proj_modify)
+
+路径B (通用, 第三方 DXF): POST /api/dxfmod/modify
+  multipart 上传 DXF + 指令 → LLM 翻译成 STRETCH 窗口操作 → 确定性应用
+  → 作用域审计 → 前后对比图 (cad_modify.run_dxf_modify)
+
+GET /api/dxfmod/status/{id} / download/{id}?type=dxf|compare|plan|report
 """
 import asyncio
 import json
@@ -12,13 +18,74 @@ from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from src.auth import get_current_user
 from src.config import TASKS_DIR, MAX_UPLOAD_BYTES
-from src.database import get_db, SessionLocal, Cad3dTask, User
+from src.database import get_db, SessionLocal, Cad3dTask, ConversionTask, User
 
 router = APIRouter(prefix="/api/dxfmod", tags=["DXF改图"])
+
+
+class TaskModifyRequest(BaseModel):
+    instructions: str = Field(..., min_length=2, max_length=2000,
+                              description="改图指令, 如: 把四个角孔从φ2.2改成φ3.2 / 宽度从120改成150")
+
+
+@router.post("/modify-task/{task_id}")
+async def modify_task(task_id: str, req: TaskModifyRequest,
+                      background_tasks: BackgroundTasks,
+                      user: User = Depends(get_current_user),
+                      db: Session = Depends(get_db)):
+    """平台生成的图纸: 按任务 id 自然语言改尺寸 (投影源头精确改 + 重渲染)."""
+    conv = db.query(ConversionTask).filter(ConversionTask.id == task_id).first()
+    work_dir = conv.work_dir if (conv and conv.user_id == user.id) else str(TASKS_DIR / task_id)
+    if not (Path(work_dir) / 'proj_v3.json').exists():
+        raise HTTPException(
+            400, "该任务无投影参数源 (非本平台生成或已清理) — "
+                 "第三方 DXF 请用 POST /api/dxfmod/modify 上传文件走 STRETCH 路径")
+    new_id = uuid.uuid4().hex
+    out_dir = str(TASKS_DIR / new_id)
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    db.add(Cad3dTask(id=new_id, user_id=user.id,
+                     prompt=f"[改图-参数源 {task_id[:8]}] {req.instructions}",
+                     status="queued", work_dir=out_dir, source_task_id=task_id,
+                     step_path=str(Path(work_dir) / 'proj_v3.json')))
+    db.commit()
+    background_tasks.add_task(_run_proj_modify, new_id, work_dir, req.instructions)
+    return {"task_id": new_id, "source_task_id": task_id, "status": "queued",
+            "path": "proj_source"}
+
+
+def _run_proj_modify(task_id: str, source_dir: str, instructions: str):
+    """后台: 参数源改尺寸 → 重渲染 → 验证 (proj_edit 全链)."""
+    db = SessionLocal()
+    task = db.query(Cad3dTask).filter(Cad3dTask.id == task_id).first()
+    try:
+        task.status = "planning"
+        db.commit()
+        from src.engine.proj_edit import run_proj_modify
+        r = asyncio.run(run_proj_modify(source_dir, instructions, task.work_dir))
+        (Path(task.work_dir) / 'modify_report.json').write_text(
+            json.dumps(r, ensure_ascii=False, indent=1, default=str), encoding='utf-8')
+        task.report_path = str(Path(task.work_dir) / 'modify_report.json')
+        task.dxf_path = r.get('dxf')
+        task.compare_path = r.get('compare_png')
+        task.llm_provider = (r.get('llm') or {}).get('provider')
+        if r.get('ok'):
+            task.status = "done"
+        else:
+            task.status = "failed"
+            task.error = f"[{r.get('stage') or 'modify'}] {str(r.get('error'))[:400]}"
+        task.updated_at = datetime.now(timezone.utc)
+        db.commit()
+    except Exception as ex:
+        task.status = "failed"
+        task.error = f"{type(ex).__name__}: {str(ex)[:400]}"
+        db.commit()
+    finally:
+        db.close()
 
 
 @router.post("/modify")
@@ -106,9 +173,15 @@ async def download(task_id: str, type: str = "dxf",
     t = db.query(Cad3dTask).filter(Cad3dTask.id == task_id).first()
     if not t or t.user_id != user.id:
         raise HTTPException(404, "任务不存在")
+    # 计划文件: 路径A=modify_plan.json (参数源), 路径B=edit_plan.json (窗口操作)
+    plan_path = None
+    for fn in ('modify_plan.json', 'edit_plan.json'):
+        p = Path(t.work_dir) / fn
+        if p.exists():
+            plan_path = str(p)
+            break
     attr = {"dxf": t.dxf_path, "compare": t.compare_path,
-            "plan": str(Path(t.work_dir) / 'edit_plan.json'),
-            "report": t.report_path}.get(type)
+            "plan": plan_path, "report": t.report_path}.get(type)
     if not attr or not Path(attr).exists():
         raise HTTPException(404, f"产物 {type} 不存在 (status={t.status})")
     media = {"dxf": "application/dxf", "compare": "image/png",
