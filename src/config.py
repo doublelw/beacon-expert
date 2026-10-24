@@ -87,6 +87,13 @@ LLM_PROVIDERS = {
         "models": ["glm-5-turbo", "glm-4.5-air"],
         "protocol": "anthropic",
     },
+    "ccswitch": {
+        # cc-switch 网关 (Anthropic 兼容协议, 路由到 glm-5.3) — 独立配额,
+        # 与 zhipu 官方 API 隔离 (429 不受 zhipu 配额影响). 凭据从 data/config.json.
+        "base_url": "https://baollm.rqez.cn/v1",
+        "models": ["glm-5.3"],
+        "protocol": "anthropic",
+    },
     "anthropic": {
         "base_url": "https://api.anthropic.com",
         "models": ["claude-sonnet-4-5-20250514"],
