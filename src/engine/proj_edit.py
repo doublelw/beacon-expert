@@ -732,12 +732,63 @@ def _extract_json(text: str):
         return None
 
 
+# ─────────────────────────────────────────────────────────────
+# 确定性规则兜底 (LLM 429/缺配额时仍能改图)
+# ─────────────────────────────────────────────────────────────
+
+def _try_rule_plan(instructions: str, digest: dict) -> Optional[dict]:
+    """高频改图指令的确定性规则匹配 — 命中则零 LLM 出计划。
+
+    覆盖: 改孔径 (φx改y / 孔径x改y)、移孔 (孔id移到... 不支持, 需坐标)、
+    拉伸 (宽度/高度加长n)。未命中返回 None, 交给 LLM。
+    """
+    import re
+    t = instructions.strip()
+    dg = digest
+    holes = dg.get('hole_groups', [])
+    # 规则1: "把 φA 的孔改成 φB" / "孔径 A 改 B"
+    m = re.search(r'(?:把|将)?\s*[φΦÕ]?\s*(\d+(?:\.\d+)?)\s*(?:mm)?\s*(?:的|直径)?孔?'
+                  r'.{0,6}?(?:改成|改为|改为|调成|调整到|增大到|减为|减至|改成|改成)\s*[φΦÕ]?\s*(\d+(?:\.\d+)?)', t)
+    if m:
+        old_d = float(m.group(1))
+        new_d = float(m.group(2))
+        if old_d > 0 and new_d > 0 and old_d != new_d:
+            # 找匹配原直径的孔组 (按摘要 hole_groups)
+            grp = next((g for g in holes if abs(g['d'] - old_d) < 0.05), None)
+            if grp:
+                return {'ops': [{'op': 'set_hole_diameter', 'axis': grp['axis'],
+                                 'd': grp['d'], 'new_d': new_d}],
+                        'note': f'φ{old_d:g} → φ{new_d:g} ({len(grp["ids"])} 孔)'}
+    # 规则2: "宽度/长度 加长 n" / "沿X加长n"
+    m2 = re.search(r'(?:宽度|长度|沿\s*[xX])\s*(?:加长|增加|加)\s*(\d+(?:\.\d+)?)', t)
+    if m2:
+        delta = float(m2.group(1))
+        if delta > 0:
+            axis = 'x' if 'x' in t.lower() or '宽度' in t else None
+            if axis is None:
+                axis = 'x' if dg.get('size', {}).get('x', 0) >= dg.get('size', {}).get('y', 0) else 'y'
+            bb = dg.get('bbox', {})
+            xmax = bb.get(f'{axis}max', 0)
+            return {'ops': [{'op': 'stretch_axis', 'axis': axis, 'delta': delta,
+                             'at': xmax}],
+                    'note': f'沿{axis}加长 {delta:g}mm'}
+    return None
+
+
 async def plan_ops(src: dict, instructions: str, max_repair: int = 2) -> tuple:
-    """NL → (ops|None, meta). 校验 + 带错误回炉 (huashu-cad 纪律)."""
-    digest = json.dumps(build_digest(src), ensure_ascii=False)
+    """NL → (ops|None, meta). 规则兜底 + LLM + 校验回炉 (huashu-cad 纪律)."""
+    digest = build_digest(src)
+    # 确定性规则优先 (零成本、零 429 风险)
+    rule = _try_rule_plan(instructions, digest)
+    if rule is not None:
+        errs = validate_ops(rule)
+        if not errs:
+            return rule, {'attempts': 0, 'llm': None, 'source': 'rule'}
+    # LLM 兜底
+    digest = json.dumps(digest, ensure_ascii=False)
     if len(digest) > 20000:
         digest = digest[:20000] + '...'
-    meta = {'attempts': 0, 'errors': []}
+    meta = {'attempts': 0, 'errors': [], 'llm': None}
     user_msg = f'图纸摘要:\n{digest}\n\n修改指令: {instructions}'
     for _ in range(max_repair + 1):
         meta['attempts'] += 1

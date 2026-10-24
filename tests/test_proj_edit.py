@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.engine.proj_edit import (
     load_source, build_digest, apply_ops, validate_ops,
-    views_for_axis, uv_of, VIEW_UV, AXES, op_add_hole,
+    views_for_axis, uv_of, VIEW_UV, AXES, op_add_hole, _try_rule_plan,
 )
 
 FIX = Path(__file__).resolve().parent / 'fixtures' / 'shells'
@@ -231,3 +231,30 @@ def test_add_hole_renders_and_preserves_existing(tmp_path):
     out = tmp_path / 'add.dxf'
     render(new['proj'], None, new['annotation'], None, str(out), veritas=new['veritas'])
     assert out.exists() and out.stat().st_size > 10000
+
+
+# ── 确定性规则规划器 (LLM 429/缺配额时改图兜底, 零成本) ─────
+
+def test_rule_plan_set_hole_diameter():
+    src = load_source(_shell('后壳'))
+    dg = build_digest(src)
+    p = _try_rule_plan('把φ4.8的孔改成φ5.5', dg)
+    assert p and p['ops'][0]['op'] == 'set_hole_diameter'
+    assert p['ops'][0]['new_d'] == 5.5 and p['ops'][0]['d'] == 4.8
+    assert p['ops'][0]['axis'] == 'Z'
+    assert validate_ops(p) == []
+
+
+def test_rule_plan_stretch():
+    src = load_source(_shell('前壳'))
+    dg = build_digest(src)
+    p = _try_rule_plan('宽度加长20', dg)
+    assert p and p['ops'][0]['op'] == 'stretch_axis'
+    assert p['ops'][0]['delta'] == 20.0
+
+
+def test_rule_plan_misses_unknown_instruction():
+    src = load_source(_shell('后壳'))
+    dg = build_digest(src)
+    # 规则不覆盖的指令 → None (交 LLM, 不臆造)
+    assert _try_rule_plan('把零件改成蓝色', dg) is None
