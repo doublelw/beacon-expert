@@ -770,6 +770,8 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
         projection['views']['Top']['circles'] = _zholes
     views = projection.get('views', {})
     _std_drawn = set()  # 已画standard_parts的位置(vn,cx,cy,r) 防止circles+arcs重复
+    _seen_circle = set()  # 精确重复CIRCLE去重 (HLR双发射同中心同半径画两次→CNC双切风险)
+    _seen_arc = set()    # 精确重复ARC去重 (同圆心同半径同弧段画两次)
 
     # 自动孔类型符号 (GB螺纹画法): veritas 识别的 csink沉头/thread螺纹孔 → 加3/4弧(大径)
     symbol_pos = set()
@@ -808,19 +810,29 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
             continue
         vl = layout.views[vn]
 
-        _seen_line = set()  # 精确重复LINE去重 (HLR双发射/对称件重影防护, x2重复零信息损失)
+        _seen_line = []  # 已画LINE的纸面坐标 (近邻去重: 不同特征投影到同一线段的重影)
         for ln in view_data.get('lines', []):
             p1 = vl.to_abs(ln['p1'][0], ln['p1'][1])
             p2 = vl.to_abs(ln['p2'][0], ln['p2'][1])
-            if math.hypot(p2[0] - p1[0], p2[1] - p1[1]) < 1e-6:
-                counts['line_skip'] = counts.get('line_skip', 0) + 1  # 零长度退化边
+            L = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
+            if L < 0.2 * vl.scale:
+                counts['line_skip'] = counts.get('line_skip', 0) + 1  # 零长度/退化短边 (倒角接缝HLR碎边, <0.2mm无工程信息)
                 continue
-            _k = tuple(sorted([(round(p1[0], 6), round(p1[1], 6)),
-                               (round(p2[0], 6), round(p2[1], 6))]))
-            if _k in _seen_line:
+            # 近邻去重 (0.001mm 纸面容忍, 与 dxf_checks 6位指纹同口径):
+            # 两条 LINE 端点两两对应重合 → 同一几何 (重影/双发射), 删第二条零信息损失
+            _q1, _q2 = (p1, p2), (p2, p1)
+            _dup = False
+            for (sq1, sq2) in _seen_line:
+                if (math.hypot(p1[0] - sq1[0], p1[1] - sq1[1]) < 0.001
+                        and math.hypot(p2[0] - sq2[0], p2[1] - sq2[1]) < 0.001) or \
+                   (math.hypot(p1[0] - sq2[0], p1[1] - sq2[1]) < 0.001
+                    and math.hypot(p2[0] - sq1[0], p2[1] - sq1[1]) < 0.001):
+                    _dup = True
+                    break
+            if _dup:
                 counts['line_dedup'] = counts.get('line_dedup', 0) + 1
                 continue
-            _seen_line.add(_k)
+            _seen_line.append((p1, p2))
             msp.add_line(p1, p2, dxfattribs={'layer': 'OUTLINE'})
             counts['line'] += 1
 
@@ -847,8 +859,18 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
                 else:
                     pass  # circles循环已画standard_parts, arcs不重复
             else:
-                msp.add_arc(center, r, a1, a2, dxfattribs={'layer': 'OUTLINE'})
-            counts['arc'] += 1
+                # 精确重复ARC去重 (同圆心同半径同弧段画两次); 同时滤退化弧 (弦长<0.2mm无工程信息)
+                _ak = (round(center[0], 3), round(center[1], 3), round(r, 3), round(a1, 1), round(a2, 1))
+                _arc_len = abs(a2 - a1) * math.pi / 180 * r
+                if _arc_len < 0.2 * vl.scale:
+                    counts['arc_dedup'] = counts.get('arc_dedup', 0) + 1
+                    continue
+                if _ak not in _seen_arc:
+                    _seen_arc.add(_ak)
+                    msp.add_arc(center, r, a1, a2, dxfattribs={'layer': 'OUTLINE'})
+                    counts['arc'] += 1
+                else:
+                    counts['arc_dedup'] = counts.get('arc_dedup', 0) + 1
 
         for sp in view_data.get('splines', []):
             pts = sp.get('points', sp.get('ctrl_points', []))
@@ -916,8 +938,13 @@ def render_projection(msp, projection: dict, layout: LayoutResult, geometry: Opt
             else:
                 # 非标准件(轮廓圆/其它): HLR几何
                 is_hole = (not true_radii) or (r_local in true_radii)
-                msp.add_circle(center, r, dxfattribs={'layer': 'HOLE' if is_hole else 'OUTLINE'})
-                counts['circle'] += 1
+                _ck = (round(center[0], 3), round(center[1], 3), round(r, 3))
+                if _ck not in _seen_circle:
+                    _seen_circle.add(_ck)
+                    msp.add_circle(center, r, dxfattribs={'layer': 'HOLE' if is_hole else 'OUTLINE'})
+                    counts['circle'] += 1
+                else:
+                    counts['circle_dedup'] = counts.get('circle_dedup', 0) + 1
             # 视图标注(代号+尺寸+引线)
             _pos_key = (round(abs(ci['cx']), 0), round(abs(ci['cy']), 0))
             _co = fastener_callout.get(_pos_key, '')
@@ -1471,6 +1498,50 @@ def render_hole_table(msp, holes: List[dict], layout: LayoutResult,
 # ─────────────────────────────────────────────────────────────
 # 图框 / 标题栏 / 明细栏
 # ─────────────────────────────────────────────────────────────
+
+def _dedup_duplicate_entities(msp) -> int:
+    """全局清除重复几何实体 (与 dxf_checks duplicate_entity 门禁同口径).
+
+    跨所有发射路径 (主循环/样条还原/csink/展开视图/标注辅助线) 在**整个 model
+    space** 上做 6 位精度指纹去重 — 与门禁判定完全一致, 保证清完门禁即过.
+    保留首现, 删除后续重复. 只删 CUT 几何 (LINE/CIRCLE/ARC/LWPOLYLINE),
+    不碰标注 (DIMENSION/TEXT/LEADER 由各自的重复防护负责).
+    """
+    from collections import defaultdict
+    seen = set()
+    dup_by_layer = defaultdict(list)
+    removed = 0
+    for e in list(msp):
+        t = e.dxftype()
+        layer = e.dxf.layer
+        if t == 'LINE':
+            ends = sorted([(round(e.dxf.start.x, 6), round(e.dxf.start.y, 6)),
+                           (round(e.dxf.end.x, 6), round(e.dxf.end.y, 6))])
+            sig = (t, layer, tuple(ends))
+        elif t == 'CIRCLE':
+            sig = (t, layer, (round(e.dxf.center.x, 6), round(e.dxf.center.y, 6)),
+                   round(e.dxf.radius, 6))
+        elif t == 'ARC':
+            sig = (t, layer, (round(e.dxf.center.x, 6), round(e.dxf.center.y, 6)),
+                   round(e.dxf.radius, 6), round(e.dxf.start_angle, 6),
+                   round(e.dxf.end_angle, 6))
+        elif t == 'LWPOLYLINE':
+            pts = tuple((round(p[0], 6), round(p[1], 6)) for p in e.get_points())
+            sig = (t, layer, bool(e.closed), pts)
+        else:
+            continue
+        if sig in seen:
+            dup_by_layer[layer].append(e)
+            continue
+        seen.add(sig)
+    for ent in [e for lst in dup_by_layer.values() for e in lst]:
+        try:
+            msp.delete_entity(ent)
+        except Exception:  # 实体已随其他删除 (共享 handle), 跳过
+            continue
+        removed += 1
+    return removed
+
 
 def render_frame(msp, layout: LayoutResult, plan: Optional[dict],
                  geometry: Optional[dict]) -> None:
@@ -2033,6 +2104,11 @@ def render(projection: dict,
     # === 展开视图 (钣金, 参考, 画在已有内容下方空白区) ===
     flat_report = render_flat_view(msp, flat, layout)
 
+    # === 全局重复实体清除 (CNC双切风险): 跨所有发射路径 (主循环/样条/csink/展开视图),
+    # 按 dxf_checks 同口径 (6位精度指纹) 删精确/近精确重复. 与 dxf_checks 的
+    # duplicate_entity 门禁一一对应 — 此处不清则门禁必报. 删除保留首现.
+    n_dup_removed = _dedup_duplicate_entities(msp)
+
     # === 保存 ===
     os.makedirs(os.path.dirname(os.path.abspath(output_dxf)), exist_ok=True)
     doc.saveas(output_dxf)
@@ -2050,6 +2126,7 @@ def render(projection: dict,
         'sheet': layout.sheet,
         'sheet_size': list(layout.sheet_size),
         'scale': layout.scale,
+        'duplicate_removed': n_dup_removed,
         'views_rendered': list(layout.origins.keys()),
         'view_origins': {k: list(v) for k, v in layout.origins.items()},
         'geometry_counts': geom_counts,
