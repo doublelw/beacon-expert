@@ -115,6 +115,186 @@ def uv_of(view: str, xyz: dict) -> tuple:
     return (xyz[m['u'][0]] * m['u'][1], xyz[m['v'][0]] * m['v'][1])
 
 
+def _feature_uv(view: str, feat: dict) -> tuple:
+    """veritas 特征 (3D position) → 视图 (u,v) 模型坐标."""
+    pos = feat.get('position') or [0.0, 0.0, 0.0]
+    return uv_of(view, dict(zip(AXES, pos)))
+
+
+def _next_feat_id(veritas: dict) -> str:
+    n = 0
+    for f in veritas.get('features', []):
+        fid = str(f.get('id', ''))
+        if fid.startswith('F'):
+            try:
+                n = max(n, int(fid[1:]))
+            except ValueError:
+                pass
+    return f'F{n + 1:04d}'
+
+
+# ─────────────────────────────────────────────────────────────
+# 新增特征发射器 (工程语义 → 几何, 多视图一致, 投影器同构)
+# ─────────────────────────────────────────────────────────────
+
+def _emit_new_hole(proj: dict, veritas: dict, feat: dict) -> None:
+    """按特征在三类视图发射几何: 法向整圆 / 侧向贯穿线 / 斜轴近似线 (标'投影')."""
+    va = (feat.get('axis_dir') or 'Z').upper()
+    r = feat.get('radius', 0.0)
+    d = feat.get('diameter', 2 * r)
+    pos = feat.get('position') or [0, 0, 0]
+    bb = proj.get('bbox', {})
+    lo, hi = bb.get(f'{va.lower()}min', 0.0), bb.get(f'{va.lower()}max', 0.0)
+    # 法向视图 (整圆): 该轴不出现在 u/v
+    for vn in views_for_axis(va.lower()):
+        u, v = _feature_uv(vn, feat)
+        vd = proj['views'].get(vn)
+        if vd is None:
+            continue
+        vd.setdefault('circles', []).append(
+            {'cx': round(u, 3), 'cy': round(v, 3), 'r': round(r, 3),
+             'hole_type': feat.get('hole_type', 'clear'), 'axis_dir': va})
+    # 侧向视图 (贯穿线): 该轴出现在 u/v, 孔投影为两条平行贯穿边
+    for vn in RENDER_VIEWS:
+        m = VIEW_UV[vn]
+        if va in (m['u'][0], m['v'][0]):
+            continue
+        uv_ = _feature_uv(vn, feat)
+        vd = proj['views'].get(vn)
+        if vd is None:
+            continue
+        # 贯穿边在视图中沿哪个坐标轴?
+        # 孔沿 va, 视图中垂直于 va 的两个轴 = u/v 本身 (va 不在其中), 贯穿边长度
+        # 取 板厚跨度 (lo..hi 映射到视图中包含 va 的轴? 不: va 不在 u/v → 取特征所在
+        # 主面跨度, 用最保守的 bbox 该轴跨度)
+        # 简化: 用 bbox[va]min/max 作为贯穿跨度, 映射到视图 u/v 中对应轴
+        # 该视图中 va 对应的物理轴坐标 = lo*sign..hi*sign (va 不在u/v, 所以跨度沿 u/v 之一)
+        # 实际: 侧视图中孔的两条贯穿线 = 在 u 方向偏移 ±r*proj, 沿 v 方向贯穿
+        # 最保守且正确的表达: 两条线在 u 坐标 = cu ± r (法向距离), 沿 v 贯穿 lo..hi
+        p3 = dict(zip(AXES, pos))
+        cu = p3[m['u'][0]] * m['u'][1]
+        cv = p3[m['v'][0]] * m['v'][1]
+        # 孔在侧视图中: u 坐标处有两条线 (cu ± r), 跨度 = va 轴跨度投影到 v?
+        # 不: va 不在该视图 u/v 里, 所以跨度只能取 bbox 在 va 轴上的 lo..hi,
+        # 但映射回纸面时 va 轴无坐标 → 侧视图的"贯穿深度"画成沿视图 u 轴 ±r 的短边
+        # (工程上侧视孔 = 两条与视图 u 平行的线, 间距 = d, 长度 = 板厚在视图 v 上的投影)
+        # 板厚轴 = thickness_axis (veritas), 映射到该视图
+        ta = (veritas.get('thickness_axis') or 'Z').upper()
+        tlo, thi = bb.get(f'{ta.lower()}min', 0.0), bb.get(f'{ta.lower()}max', 0.0)
+        # 板厚在视图 u/v 中的坐标分量
+        if m['u'][0] == ta:
+            tstart, tend = tlo * m['u'][1], thi * m['u'][1]
+            # 两条贯穿线: 沿 u 轴从 tstart..tend, 在 v = cv ± r
+            for sgn in (1, -1):
+                vd.setdefault('lines', []).append(
+                    {'p1': [round(tstart, 3), round(cv + sgn * r, 3)],
+                     'p2': [round(tend, 3), round(cv + sgn * r, 3)],
+                     'role': 'hole_side'})
+        elif m['v'][0] == ta:
+            tlo_v, thi_v = tlo * m['v'][1], thi * m['v'][1]
+            # 符号轴: lo*sign 可能 > hi*sign (sign=-1 时), 排序保证 p1<p2
+            a, b = sorted((tlo_v, thi_v))
+            # 两条贯穿线: 沿 v 轴从 a..b, 在 u = cu ± r
+            for sgn in (1, -1):
+                vd.setdefault('lines', []).append(
+                    {'p1': [round(cu + sgn * r, 3), round(a, 3)],
+                     'p2': [round(cu + sgn * r, 3), round(b, 3)],
+                     'role': 'hole_side'})
+        # 斜轴 (va 与 ta 不同且视图 u/v 都不含 va 的轴 → 近似): 用 bbox va 跨度沿 v
+        elif va not in (m['u'][0], m['v'][0]):
+            for sgn in (1, -1):
+                vd.setdefault('lines', []).append(
+                    {'p1': [round(cu + sgn * r, 3), round(lo, 3)],
+                     'p2': [round(cu + sgn * r, 3), round(hi, 3)],
+                     'role': 'hole_side_approx'})
+
+
+def op_add_hole(proj: dict, veritas: dict, ann: dict,
+                axis: str, pos: list, d: float,
+                through: bool = True, hole_type: str = 'clear') -> dict:
+    """新增孔: 法向整圆 + 侧向贯穿边 + veritas 特征登记 + 孔径标注.
+
+    几何按投影器同构规则发射 (法向圆 + 侧向贯穿线), 保证重渲染后
+    各视图一致。侧向视图的贯穿边用 bbox 板厚跨度近似, 斜轴件标注 '投影'。
+    """
+    axis = (axis or '').upper()
+    if axis not in ('X', 'Y', 'Z'):
+        return {'ok': False, 'error': f'axis 必须是 X/Y/Z, 收到 {axis!r}'}
+    if not (pos and len(pos) == 3):
+        return {'ok': False, 'error': 'pos 必须是 [x,y,z] 模型坐标'}
+    if not d or d <= 0:
+        return {'ok': False, 'error': 'd (直径) 必须 > 0'}
+    feat = {
+        'id': _next_feat_id(veritas), 'type': 'PIERCING',
+        'axis_dir': axis, 'direction': axis + '+',
+        'position': [float(v) for v in pos],
+        'radius': d / 2.0, 'diameter': float(d),
+        'all_radii': [d / 2.0], 'through': through,
+        'hole_type': hole_type, 'span': d / 2.0,
+    }
+    veritas.setdefault('features', []).append(feat)
+    _emit_new_hole(proj, veritas, feat)
+    n_new_dim = 0
+    # 孔径标注 (法向视图, 过孔心)
+    nn_views = views_for_axis(axis.lower())
+    if nn_views:
+        u0, v0 = _feature_uv(nn_views[0], feat)
+        ann.setdefault('dimensions', []).append({
+            'type': 'diameter', 'view': nn_views[0], 'level': 0,
+            'p1': [round(u0 - d / 2, 3), round(v0, 3)],
+            'p2': [round(u0, 3), round(v0, 3)],
+            'value': float(d), 'text': f'φ{d:g}',
+            'layer': 'DIM', 'leader_pts': []})
+        n_new_dim = 1
+    return {'ok': True, 'op': 'add_hole', 'feature': feat['id'],
+            'changed': {'circles': len(nn_views), 'veritas': 1,
+                        'dims': n_new_dim}}
+
+
+def _annotate_undeclared_holes(proj: dict, veritas: dict, ann: dict) -> int:
+    """标注链式补齐: 每个 PIERCING 特征若其法向视图无对应孔径标注, 补一条.
+
+    改图后标注密度不缩水 (删/移孔不会带走其它孔的标注), 且新孔必带标注 —
+    精准加工图: 每个孔有尺寸可依。已在 annotation.dimensions 里有
+    diameter 标注且 p1 落在该孔法向圆心的特征不再补 (去重)。
+    """
+    dims = ann.setdefault('dimensions', [])
+    # 已有 diameter 标注覆盖的 (视图, 孔心u, 孔心v)
+    covered = set()
+    for dd in dims:
+        if dd.get('type') != 'diameter' or dd.get('view') not in VIEW_UV:
+            continue
+        p1 = dd.get('p1') or []
+        if len(p1) == 2:
+            covered.add((dd['view'], round(p1[0], 1), round(p1[1], 1)))
+    n = 0
+    for f in veritas.get('features', []):
+        if f.get('type') != 'PIERCING':
+            continue
+        va = (f.get('axis_dir') or 'Z').lower()
+        nn = views_for_axis(va)
+        if not nn:
+            continue
+        vn = nn[0]
+        u, v = _feature_uv(vn, f)
+        key = (vn, round(u, 1), round(v, 1))
+        if key in covered:
+            continue
+        r = f.get('radius', 0.0)
+        dd = {
+            'type': 'diameter', 'view': vn, 'level': 0,
+            'p1': [round(u - r, 3), round(v, 3)],
+            'p2': [round(u, 3), round(v, 3)],
+            'value': round(r * 2, 2), 'text': f'φ{r * 2:g}',
+            'layer': 'DIM', 'leader_pts': [],
+        }
+        dims.append(dd)
+        covered.add(key)
+        n += 1
+    return n
+
+
+
 def shift_uv(view: str, u: float, v: float, axis: str, delta: float, at: float):
     """STRETCH 语义: 该视图中全局坐标 >= at 的分量平移 delta.
     仅移动越界分量本身 → 圆仍为圆 (不做缩放, 否则孔变椭圆)."""
@@ -430,6 +610,7 @@ OPS = {
     'set_hole_diameter': op_set_hole_diameter,
     'move_hole': op_move_hole,
     'delete_hole': op_delete_hole,
+    'add_hole': op_add_hole,
 }
 
 
@@ -472,6 +653,12 @@ PLAN_SYSTEM = """你是工程图改图规划器。输入是图纸的**工程语�
      → axis 取该轴, delta = 150-120, at 取 p1/p2 中较小的那个坐标值
    - "右端加长 20": axis=x, delta=20, at = bbox.xmax - 该段长度
 4. 删孔:    {"op":"delete_hole","ids":["F0005"]}
+5. 新增孔:  {"op":"add_hole","axis":"Z","pos":[0,0,-14.3],"d":8,"through":true}
+   - 在**已有板材范围内**新增 PIERCING 孔: pos=[x,y,z] 模型坐标 (孔中心),
+     d=直径(mm), axis=孔轴向, through=true 贯穿 (钣金件默认贯穿)。
+   - 自动发射几何: 法向视图整圆 + 侧向视图贯穿边 + veritas 特征登记 + 孔径标注。
+   - 仅当用户明确要求"加孔/开孔/多一个孔"时用; 改已有孔用 set_hole_diameter/move_hole。
+   - pos 的 z 取摘要里同类孔的 z (板材面高度), 不要臆造。
 
 规则:
 1. 指令没提到的内容一律不动 (作用范围外必须保全)。
@@ -513,6 +700,15 @@ def validate_ops(plan) -> list:
         elif k == 'delete_hole':
             if not op.get('ids'):
                 errs.append(f'ops[{i}] delete_hole 需要 ids')
+        elif k == 'add_hole':
+            if str(op.get('axis', '')).upper() not in ('X', 'Y', 'Z'):
+                errs.append(f'ops[{i}] add_hole 需要 axis∈X/Y/Z')
+            pos = op.get('pos')
+            if not (isinstance(pos, list) and len(pos) == 3
+                    and all(isinstance(v, (int, float)) for v in pos)):
+                errs.append(f'ops[{i}] add_hole 需要 pos=[x,y,z] 模型坐标')
+            if not (isinstance(op.get('d'), (int, float)) and op['d'] > 0):
+                errs.append(f'ops[{i}] add_hole 需要 d>0 (直径mm)')
     return errs
 
 

@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.engine.proj_edit import (
     load_source, build_digest, apply_ops, validate_ops,
-    views_for_axis, uv_of, VIEW_UV, AXES,
+    views_for_axis, uv_of, VIEW_UV, AXES, op_add_hole,
 )
 
 FIX = Path(__file__).resolve().parent / 'fixtures' / 'shells'
@@ -166,3 +166,68 @@ def test_rerender_after_modify(tmp_path):
     from src.engine.dxf_checks import validate_dxf_file
     errs = [f for f in validate_dxf_file(str(out)) if f.severity == 'error']
     assert len(errs) <= 5, [f.render() for f in errs][:5]
+
+
+# ── 新增特征 (add_hole): 法向整圆 + 侧向贯穿边 + veritas 登记 + 标注 ──
+
+def test_add_hole_registers_feature_and_emits_geometry():
+    src = load_source(_shell('前壳'))
+    new, log = apply_ops(src, [
+        {'op': 'add_hole', 'axis': 'Z', 'pos': [0.0, -60.0, 0.0], 'd': 8.0, 'through': True}
+    ])
+    assert log[0]['ok'], log
+    assert log[0]['feature'].startswith('F')
+    # veritas 登记了新特征 (PIERCING φ8)
+    feats = new['veritas']['features']
+    newf = [f for f in feats if abs(f.get('diameter', 0) - 8.0) < 1e-6 and f.get('axis_dir') == 'Z']
+    assert newf, 'veritas 未登记新 PIERCING φ8'
+    # 法向视图 (Z → Front/Back) 各画一个整圆
+    for vn in views_for_axis('z'):
+        cs = [c for c in new['proj']['views'][vn].get('circles', [])
+              if abs(c['r'] - 4.0) < 0.05 and abs(c['cx'] - 0.0) < 0.5]
+        assert cs, f'{vn} 缺新孔整圆'
+    # 标注含一条 φ8 diameter
+    dia = [d for d in new['annotation'].get('dimensions', [])
+           if d.get('type') == 'diameter' and abs(d.get('value', 0) - 8.0) < 0.01]
+    assert dia, '未生成新孔径标注'
+
+
+def test_add_hole_rejects_bad_input():
+    src = load_source(_shell('前壳'))
+    _, log1 = apply_ops(src, [{'op': 'add_hole', 'axis': 'W', 'pos': [0, 0, 0], 'd': 5}])
+    assert not log1[0]['ok'] and 'X/Y/Z' in log1[0]['error']
+    _, log2 = apply_ops(src, [{'op': 'add_hole', 'axis': 'Z', 'pos': [1, 2], 'd': 5}])
+    assert not log2[0]['ok']
+    _, log3 = apply_ops(src, [{'op': 'add_hole', 'axis': 'Z', 'pos': [0, 0, 0], 'd': -3}])
+    assert not log3[0]['ok'] and 'd (直径)' in log3[0]['error']
+
+
+def test_validate_ops_covers_add_hole():
+    ok = {'ops': [{'op': 'add_hole', 'axis': 'Z', 'pos': [1, 2, 3], 'd': 5}]}
+    assert validate_ops(ok) == []
+    bad_pos = {'ops': [{'op': 'add_hole', 'axis': 'Z', 'pos': [1], 'd': 5}]}
+    assert any('pos' in e for e in validate_ops(bad_pos))
+    bad_d = {'ops': [{'op': 'add_hole', 'axis': 'Z', 'pos': [1, 2, 3], 'd': 0}]}
+    assert any('d' in e for e in validate_ops(bad_d))
+
+
+def test_add_hole_renders_and_preserves_existing(tmp_path):
+    """新增孔后可重渲染, 且原有孔几何不变 (作用域保全)."""
+    pytest.importorskip('ezdxf')
+    src = load_source(_shell('前壳'))
+    old_r = Counter(
+        round(c['r'], 2)
+        for vd in src['proj']['views'].values() for c in vd.get('circles', []))
+    new, log = apply_ops(src, [
+        {'op': 'add_hole', 'axis': 'Z', 'pos': [5.0, -55.0, 0.0], 'd': 6.0}
+    ])
+    assert log[0]['ok'], log
+    new_r = Counter(
+        round(c['r'], 2)
+        for vd in new['proj']['views'].values() for c in vd.get('circles', []))
+    # 原圆一个不少 (新增只是追加, 不改旧几何)
+    assert old_r.items() <= new_r.items(), '新增孔改动了原有圆 (作用域未保全)'
+    from src.engine.render_engine import render
+    out = tmp_path / 'add.dxf'
+    render(new['proj'], None, new['annotation'], None, str(out), veritas=new['veritas'])
+    assert out.exists() and out.stat().st_size > 10000
