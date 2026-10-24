@@ -391,6 +391,23 @@ def validate_drawing_document(document: object) -> list[DrawingFinding]:
 
     findings.extend(_open_chain_findings(open_curves_by_cut_layer))
 
+    # CAD 兼容检查: AutoCAD 专有实体类型 (中望/浩辰 渲染不稳).
+    # 在 cut 层 = error (CNC 真风险), 在参考/标注层 = warning.
+    # LEADER 应改用 LWPOLYLINE+TEXT, MULTILEADER 同理.
+    _ACAD_ONLY_TYPES = {"LEADER", "MULTILEADER", "ARC_DIMENSION"}
+    for entity in modelspace:
+        kind = entity.dxftype()
+        if kind not in _ACAD_ONLY_TYPES:
+            continue
+        layer = _entity_layer(entity)
+        sev = "error" if (not is_drawing
+                           and declared_layer_intents.get(layer, "cut") == "cut") \
+              else "warning"
+        findings.append(DrawingFinding(
+            sev, "zwcad_compat",
+            f"AutoCAD-only {kind} on layer {layer!r} (use LWPOLYLINE+TEXT "
+            f"for ZWCAD/Haochen compatibility)"))
+
     if geometry_count == 0:
         findings.append(
             DrawingFinding("error", "empty_drawing", "modelspace contains no geometry entities")

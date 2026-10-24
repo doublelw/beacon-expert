@@ -1305,7 +1305,10 @@ def render_annotation(msp, dims: List[dict], layout: LayoutResult,
             elif t == 'leader':
                 pts_local = d.get('leader_pts', [list(p1_local), list(p2_local)])
                 pts_abs = [vl.to_abs(pp[0], pp[1]) for pp in pts_local]
-                msp.add_leader(pts_abs, dxfattribs={'layer': 'LEADER'})
+                # 引出线用 LWPOLYLINE 折线 (中望/浩辰兼容), 非 AutoCAD 专有 LEADER
+                # (LEADER 中望渲染不稳, 折线+TEXT 各 CAD 一致)
+                if len(pts_abs) >= 2:
+                    msp.add_lwpolyline(pts_abs, dxfattribs={'layer': 'LEADER'})
                 if pts_abs and text:
                     end = pts_abs[-1]
                     msp.add_text(
